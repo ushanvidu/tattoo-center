@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { PRODUCTS, CATEGORIES } from '../data/data';
 
-const http = axios.create({ baseURL: '/api' });
+const http = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
 
 // Inject the active JWT (user token takes priority over admin token)
 http.interceptors.request.use(config => {
