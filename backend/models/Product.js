@@ -14,6 +14,11 @@ const productSchema = new mongoose.Schema({
   highlight: String,
   tags:      [String],
   specs:     mongoose.Schema.Types.Mixed,
+
+  /* ── Media ─────────────────────── */
+  thumbnail: { type: String, default: '' },   // primary image URL / path
+  images:    { type: [String], default: [] },  // gallery images
+  videoUrl:  { type: String, default: '' },    // YouTube URL or /uploads/video.mp4
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

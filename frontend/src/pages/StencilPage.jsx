@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import Reveal from '../components/shared/Reveal';
 import Icons from '../components/shared/Icons';
@@ -221,7 +222,7 @@ export function StencilTool({ compact = false }) {
           </div>
           {!compact && (
             <div className="flex gap8 wrap-flex" style={{ marginTop: 16 }}>
-              <button className="btn btn-acc" onClick={() => store.navTo('shop', { cat: 'printers' })} style={{ flex: '1 1 auto' }}><Icons.printer /> Shop Stencil Printers</button>
+              <Link to="/shop/printers" className="btn btn-acc" style={{ flex: '1 1 auto' }}><Icons.printer /> Shop Stencil Printers</Link>
               <button className="btn btn-ghost" onClick={() => store.openBooking()}><Icons.cal /> Book Live Demo</button>
             </div>
           )}
@@ -261,7 +262,7 @@ export default function StencilPage() {
             <h2 className="h1" style={{ margin: '14px 0 14px' }}>Print This Stencil on a Pro Printer</h2>
             <p className="lede" style={{ marginInline: 'auto' }}>Wireless thermal printers that turn your preview into a crisp, smudge-proof transfer in seconds.</p>
             <div className="flex gap12 jc wrap-flex" style={{ marginTop: 24 }}>
-              <button className="btn btn-acc btn-lg" onClick={() => s.navTo('shop', { cat: 'printers' })}><Icons.printer /> Shop Stencil Printers</button>
+              <Link to="/shop/printers" className="btn btn-acc btn-lg"><Icons.printer /> Shop Stencil Printers</Link>
               <button className="btn btn-ghost btn-lg" onClick={() => s.openBooking()}><Icons.cal /> Book a Live Demo</button>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { fmt, waLink } from '../../data/data';
 import { TONE } from '../../data/data';
@@ -29,7 +30,7 @@ export default function ProductCard({ product, onPreview }) {
 
   return (
     <div className="pcard">
-      <div className="pcard-media" onClick={() => onPreview && onPreview(product)}>
+      <div className="pcard-media">
         <div className="pcard-tags">{(product.tags || []).map(tagEl)}</div>
         <button
           className={`pcard-fav ${fav ? 'on' : ''}`}
@@ -38,7 +39,9 @@ export default function ProductCard({ product, onPreview }) {
         >
           <Icons.heart />
         </button>
-        <ProductMedia product={product} />
+        <Link to={`/product/${id}`} style={{ display: 'block' }}>
+          <ProductMedia product={product} />
+        </Link>
         <div className="pcard-quick">
           <button className="btn btn-solid btn-sm" style={{ flex: 1 }}
             onClick={e => { e.stopPropagation(); onPreview && onPreview(product); }}>
@@ -51,7 +54,9 @@ export default function ProductCard({ product, onPreview }) {
           <span className="pcard-cat">{product.sub}</span>
           <Stars value={product.rating} />
         </div>
-        <div className="pcard-name">{product.name}</div>
+        <Link to={`/product/${id}`} className="pcard-name" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+          {product.name}
+        </Link>
         <div className="pcard-hl">{product.highlight}</div>
         <div className="pcard-foot">
           <div className="price">

@@ -1,32 +1,49 @@
-import { useStore } from '../../context/StoreContext';
+import { Link } from 'react-router-dom';
 import { waLink, WA_DISPLAY } from '../../data/data';
 import Icons from '../shared/Icons';
 
+const COLS = [
+  {
+    h: 'Shop',
+    links: [
+      { label: 'Stencil Printers',      to: '/shop/printers' },
+      { label: 'Tattoo Machines',        to: '/shop/machines' },
+      { label: 'Needles & Cartridges',   to: '/shop/needles' },
+      { label: 'Tattoo Inks',            to: '/shop/inks' },
+      { label: 'Aftercare',              to: '/shop/aftercare' },
+      { label: 'All Products',           to: '/shop' },
+    ],
+  },
+  {
+    h: 'Tools',
+    links: [
+      { label: 'Stencil Preview Tool',   to: '/stencil' },
+      { label: 'Live Demo Booking',      to: '/booking' },
+      { label: 'About Us',               to: '/about' },
+      { label: 'Contact Us',             to: '/contact' },
+    ],
+  },
+  {
+    h: 'Support',
+    links: [
+      { label: 'FAQ & Troubleshooting',  to: '/faq' },
+      { label: 'Ask a Question',         to: '/faq' },
+      { label: 'Returns & Warranty',     to: '/faq' },
+      { label: 'Track Order',            to: '/account' },
+    ],
+  },
+];
+
 export default function Footer() {
-  const s = useStore();
-
-  const cols = [
-    { h: 'Shop',    links: ['Stencil Printers','Tattoo Machines','Needles & Cartridges','Tattoo Inks','Aftercare','All Categories'] },
-    { h: 'Tools',   links: ['Stencil Preview Tool','Live Demo Booking','Testing Lab','Demo Videos','Compatibility Guide'] },
-    { h: 'Support', links: ['FAQ & Troubleshooting','Shipping & Delivery','Returns & Warranty','Track Order','Contact Us'] },
-  ];
-
-  const handleLink = (l) => {
-    if (l === 'Stencil Preview Tool') s.navTo('stencil');
-    else if (l === 'Live Demo Booking') s.navTo('booking');
-    else s.navTo('shop');
-  };
-
   return (
     <footer id="contact" className="grain" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative', paddingTop: 'clamp(56px,7vw,90px)' }}>
       <div className="wrap" style={{ position: 'relative', zIndex: 1 }}>
         <div className="foot-grid">
           <div>
-            <div className="logo" style={{ marginBottom: 16 }}>
-              <div className="logo-mark"><b>T</b></div>
-              <div className="logo-txt">Tattoo Center<small>PRO EQUIPMENT</small></div>
-            </div>
-            <p className="text-dim" style={{ maxWidth: '34ch', fontSize: 14 }}>
+            <Link to="/" className="logo" style={{ marginBottom: 16, display: 'inline-flex' }}>
+              <div className="logo-txt">TATTOO CENTER<small>PRO EQUIPMENT</small></div>
+            </Link>
+            <p className="text-dim" style={{ maxWidth: '34ch', fontSize: 14, marginTop: 16 }}>
               Professional tattoo equipment tested by working artists before it reaches your studio. Printers, machines, needles, inks &amp; more.
             </p>
             <div className="flex gap12" style={{ marginTop: 20 }}>
@@ -35,22 +52,26 @@ export default function Footer() {
               </a>
             </div>
           </div>
-          {cols.map(c => (
+
+          {COLS.map(c => (
             <div key={c.h}>
               <h4 className="h3" style={{ fontSize: 15, marginBottom: 16, letterSpacing: '.06em' }}>{c.h}</h4>
               <div className="col gap12">
-                {c.links.map(l => (
-                  <a key={l} className="text-dim" style={{ fontSize: 14, cursor: 'pointer' }} onClick={() => handleLink(l)}>{l}</a>
+                {c.links.map(({ label, to }) => (
+                  <Link key={label} to={to} className="text-dim" style={{ fontSize: 14, textDecoration: 'none' }}>
+                    {label}
+                  </Link>
                 ))}
               </div>
             </div>
           ))}
         </div>
+
         <div className="tick-rule" style={{ marginBottom: 22 }} />
         <div className="flex jb ac wrap-flex gap16" style={{ paddingBottom: 34 }}>
           <span className="mono text-dim" style={{ fontSize: 12 }}>© 2026 Tattoo Center · Professional Equipment</span>
           <div className="flex gap16 wrap-flex">
-            <span className="chip"><Icons.shield /> Secure · Koko &amp; PayHere</span>
+            <span className="chip"><Icons.shield /> PayHere · Koko</span>
             <span className="chip"><Icons.truck /> Island-wide delivery</span>
           </div>
         </div>

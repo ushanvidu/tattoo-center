@@ -25,6 +25,7 @@
   --r-xs: 6px; --r-sm: 10px; --r: 14px; --r-lg: 20px; --r-xl: 28px;
   --sh:    0 18px 50px -22px rgba(0,0,0,.8);
   --sh-lg: 0 40px 90px -30px rgba(0,0,0,.85);
+  --f-logo: 'Cinzel', 'Trajan Pro', serif;
   --f-disp: 'Oswald', sans-serif;
   --f-body: 'Space Grotesk', sans-serif;
   --f-mono: 'Special Elite', 'Courier New', monospace;
@@ -197,7 +198,7 @@ input, textarea, select { font-family: inherit; color: inherit; }
    HEADER / NAV
    ============================================================ */
 .nav {
-  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 80;
+  position: fixed; top: var(--bar-h); left: 0; right: 0; height: var(--nav-h); z-index: 80;
   display: flex; align-items: center;
   transition: background .3s, border-color .3s, backdrop-filter .3s;
   border-bottom: 1px solid transparent;
@@ -207,13 +208,11 @@ input, textarea, select { font-family: inherit; color: inherit; }
   width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: var(--hpad);
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
 }
-.logo { display: flex; align-items: center; gap: 11px; cursor: pointer; }
-.logo-mark {
-  width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center;
-  background: linear-gradient(150deg,#15151b,#0b0b0e); border: 1px solid var(--line-2); position: relative;
-}
-.logo-mark::after { content: ""; position: absolute; inset: 0; border-radius: 9px; box-shadow: inset 0 0 14px rgba(0,224,198,.35); }
-.logo-mark b { font-family: var(--f-disp); font-weight: 700; color: var(--acc); font-size: 20px; line-height: 1; }
+.logo { display: flex; align-items: center; gap: 11px; cursor: pointer; text-decoration: none; color: inherit; }
+.logo-serif-wrap { display: flex; flex-direction: column; gap: 2px; }
+.logo-serif { font-family: var(--f-logo); font-weight: 700; font-size: 17px; letter-spacing: .14em; line-height: 1; color: var(--text); text-transform: uppercase; }
+.logo-serif-sub { font-family: var(--f-mono); font-size: 7.5px; letter-spacing: .38em; color: var(--faint); font-weight: 400; text-transform: uppercase; display: block; }
+.logo-mark { display: none !important; }
 .logo-txt { font-family: var(--f-disp); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 18px; line-height: 1; }
 .logo-txt small { display: block; font-family: var(--f-mono); font-size: 8.5px; letter-spacing: .34em; color: var(--faint); font-weight: 400; margin-top: 3px; }
 .nav-menu { display: flex; align-items: center; gap: 4px; }
@@ -338,9 +337,9 @@ input, textarea, select { font-family: inherit; color: inherit; }
 .modal {
   width: min(720px,100%); max-height: 88vh; overflow-y: auto; background: var(--bg-1);
   border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--sh-lg);
-  transform: translateY(16px) scale(.98); opacity: 0; transition: .3s; pointer-events: auto;
+  transform: translateY(16px) scale(.98); opacity: 0; transition: .3s; pointer-events: none;
 }
-.modal.show { transform: none; opacity: 1; }
+.modal.show { transform: none; opacity: 1; pointer-events: auto; }
 .modal-wide { width: min(940px,100%); }
 
 /* cart line */
@@ -564,3 +563,31 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: none; b
 /* quick-preview grid */
 .qp-grid { display: grid; grid-template-columns: 1fr 1fr; }
 @media (max-width: 680px) { .qp-grid { grid-template-columns: 1fr; } }
+
+/* ---------- announcement bar ---------- */
+:root { --bar-h: 40px; }
+body { padding-top: var(--bar-h); }
+
+@keyframes barSlideup {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes barSlidedown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ann-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 100px;
+  background: rgba(255,255,255,.18); color: #fff;
+  font-size: 11px; font-family: 'Oswald','Arial Narrow',sans-serif;
+  font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  text-decoration: none; transition: background .15s;
+  white-space: nowrap;
+}
+.ann-cta:hover { background: rgba(255,255,255,.3); }
+
+/* ---------- admin dark inputs ---------- */
+.inp-dark { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: #fff; border-radius: var(--r-sm); padding: 12px 14px; width: 100%; font-family: inherit; font-size: 14px; transition: border-color .18s; }
+.inp-dark:focus { outline: none; border-color: #00e0c6; }

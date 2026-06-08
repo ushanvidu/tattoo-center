@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES, FEATURED_CATS, TONE, waLink, fmt } from '../data/data';
 import Reveal from '../components/shared/Reveal';
@@ -27,8 +28,8 @@ function Hero() {
               Premium tattoo equipment for modern artists — stencil printers, machines, needles, inks and transfer supplies, tested in our lab before they reach your studio.
             </p>
             <div className="flex gap12 wrap-flex" style={{ marginTop: 30 }}>
-              <button className="btn btn-acc btn-lg" onClick={() => s.navTo('shop')}><Icons.grid /> Shop Equipment</button>
-              <button className="btn btn-ghost btn-lg" onClick={() => s.navTo('stencil')}><Icons.layers /> Try Stencil Preview</button>
+              <Link to="/shop" className="btn btn-acc btn-lg"><Icons.grid /> Shop Equipment</Link>
+              <Link to="/stencil" className="btn btn-ghost btn-lg"><Icons.layers /> Try Stencil Preview</Link>
               <button className="btn btn-solid btn-lg" onClick={() => s.openBooking()}><Icons.cal /> Book Live Demo</button>
             </div>
             <div className="flex gap24 wrap-flex" style={{ marginTop: 34 }}>
@@ -110,20 +111,19 @@ function DifferenceSection() {
 
 /* ── Category Grid ── */
 function CategoryGrid() {
-  const s = useStore();
   const cats = FEATURED_CATS.map(id => CATEGORIES.find(c => c.id === id));
   return (
     <section className="section" style={{ background: 'var(--bg-1)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
       <div className="wrap">
         <Reveal className="section-head flex jb ac wrap-flex" style={{ flexDirection: 'row', gap: 20 }}>
           <div><span className="eyebrow">Quick access</span><h2 className="h1" style={{ marginTop: 14 }}>Shop by Category</h2></div>
-          <button className="btn btn-ghost" onClick={() => s.navTo('shop')}>All 11 categories <Icons.arrow /></button>
+          <Link to="/shop" className="btn btn-ghost">All 11 categories <Icons.arrow /></Link>
         </Reveal>
         <div className="cat-grid">
           {cats.map((c, i) => {
             const count = PRODUCTS.filter(p => p.cat === c.id).length;
             return (
-              <Reveal key={c.id} delay={i * 60} className="cat-tile" onClick={() => s.navTo('shop', { cat: c.id })}>
+              <Reveal key={c.id} delay={i * 60} as={Link} to={`/shop/${c.id}`} className="cat-tile" style={{ textDecoration: 'none', display: 'block' }}>
                 <div className="ph" style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 100% at 70% 20%, ${TONE[c.id]}, #0a0a0d 75%)` }} />
                 <div className="cat-scan" />
                 <div className="cat-body">
@@ -147,7 +147,6 @@ function CategoryGrid() {
 
 /* ── Workflow ── */
 function Workflow() {
-  const s = useStore();
   const steps = [
     ['upload','Upload Design','Drop your artwork into our preview tool — PNG, JPG or SVG.'],
     ['printer','Print Stencil','Wireless thermal printing gives a crisp transfer in 8 seconds.'],
@@ -177,7 +176,7 @@ function Workflow() {
           })}
         </Reveal>
         <div className="flex jc" style={{ marginTop: 40 }}>
-          <button className="btn btn-acc btn-lg" onClick={() => s.navTo('stencil')}><Icons.play /> Watch Full Demo</button>
+          <Link to="/stencil" className="btn btn-acc btn-lg"><Icons.play /> Watch Full Demo</Link>
         </div>
       </div>
     </section>
@@ -193,7 +192,7 @@ function BestSellers() {
       <div className="wrap">
         <Reveal className="section-head flex jb ac wrap-flex" style={{ flexDirection: 'row' }}>
           <div><span className="eyebrow">Artist recommended</span><h2 className="h1" style={{ marginTop: 14 }}>Best Sellers</h2></div>
-          <button className="btn btn-ghost" onClick={() => s.navTo('shop')}>Shop all <Icons.arrow /></button>
+          <Link to="/shop" className="btn btn-ghost">Shop all <Icons.arrow /></Link>
         </Reveal>
       </div>
       <div className="wrap">
@@ -207,7 +206,6 @@ function BestSellers() {
 
 /* ── Testing Lab ── */
 function TestingLab() {
-  const s = useStore();
   const tests = [
     ['machine','Machine Vibration','Stroke consistency & hum measured on every rotary.','Vibration stability',92],
     ['needle','Needle Precision','Lining grouping checked under magnification.','Lining precision',96],
@@ -246,7 +244,7 @@ function TestingLab() {
           })}
         </div>
         <div className="flex jc" style={{ marginTop: 36 }}>
-          <button className="btn btn-ghost btn-lg" onClick={() => s.navTo('shop')}>Explore tested equipment <Icons.arrow /></button>
+          <Link to="/shop" className="btn btn-ghost btn-lg">Explore tested equipment <Icons.arrow /></Link>
         </div>
       </div>
     </section>
@@ -346,7 +344,6 @@ function Testimonials() {
 
 /* ── Final CTA ── */
 function FinalCTA() {
-  const s = useStore();
   return (
     <section className="section grain" style={{ position: 'relative', background: 'radial-gradient(80% 120% at 50% 0%, rgba(0,224,198,.10), var(--bg) 60%)' }}>
       <div className="wrap" style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
@@ -354,7 +351,7 @@ function FinalCTA() {
           <h2 className="h-mega" style={{ fontSize: 'clamp(40px,6.5vw,92px)' }}>Equip Your<br /><span className="text-acc">Craft.</span></h2>
           <p className="lede" style={{ marginInline: 'auto', marginTop: 18 }}>Pro-grade tattoo equipment, tested before it ships. Order online, on WhatsApp, or see it live first.</p>
           <div className="flex gap12 jc wrap-flex" style={{ marginTop: 30 }}>
-            <button className="btn btn-acc btn-lg" onClick={() => s.navTo('shop')}><Icons.grid /> Shop Equipment</button>
+            <Link to="/shop" className="btn btn-acc btn-lg"><Icons.grid /> Shop Equipment</Link>
             <a className="btn btn-wa btn-lg" href={waLink('Hi Tattoo Center!')} target="_blank" rel="noreferrer"><Icons.wa /> Order on WhatsApp</a>
           </div>
         </Reveal>

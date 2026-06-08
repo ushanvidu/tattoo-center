@@ -59,5 +59,5 @@ export const PRODUCTS = [
 export const WHATSAPP    = '94715367306';
 export const WA_DISPLAY  = '071 536 7306';
 
-export const fmt = (n) => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0 });
+export const fmt = (n) => 'Rs. ' + Number(n).toLocaleString('en-LK', { minimumFractionDigits: 0 });
 export const waLink = (text) => `https://wa.me/${WHATSAPP}?text=` + encodeURIComponent(text);

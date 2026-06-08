@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES, BRANDS, fmt } from '../data/data';
 import ProductCard from '../components/shared/ProductCard';
@@ -15,10 +16,10 @@ function FOpt({ on, onClick, label, count }) {
 }
 
 export default function ShopPage() {
-  const s = useStore();
-  const init = s.routeParams?.cat ? [s.routeParams.cat] : [];
-
-  const [cats,    setCats]    = useState(init);
+  const s        = useStore();
+  const location = useLocation();
+  const initCat  = location.state?.cat;
+  const [cats,    setCats]    = useState(initCat ? [initCat] : []);
   const [brands,  setBrands]  = useState([]);
   const [skill,   setSkill]   = useState([]);
   const [inStock, setInStock] = useState(false);
@@ -26,7 +27,7 @@ export default function ShopPage() {
   const [sort,    setSort]    = useState('featured');
   const [openF,   setOpenF]   = useState(false);
 
-  useEffect(() => { if (s.routeParams?.cat) setCats([s.routeParams.cat]); }, [s.routeParams?.cat]);
+  useEffect(() => { if (location.state?.cat) setCats([location.state.cat]); }, [location.state?.cat]);
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const toggle = (arr, set, v) => set(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
