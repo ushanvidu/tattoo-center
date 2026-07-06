@@ -10,6 +10,9 @@ node_modules/
 dist/
 build/
 
+# User-uploaded runtime data
+backend/public/uploads/
+
 # macOS
 .DS_Store
 
