@@ -86,7 +86,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <div className="pgrid">
-            {sorted.map(p => <ProductCard key={p.id} product={p} />)}
+            {sorted.map(p => <ProductCard key={p.id || p._id} product={p} />)}
           </div>
         )}
       </div>

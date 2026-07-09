@@ -39,7 +39,9 @@ router.post('/', adminAuth, upload.single('file'), (req, res) => {
   const ext  = path.extname(req.file.filename).toLowerCase();
   const type = ALLOWED_IMG.includes(ext) ? 'image' : 'video';
   res.json({
-    url:      `/uploads/${req.file.filename}`,
+    // Absolute URL: frontend and backend live on different domains in
+    // production (Vercel + Render), so a relative /uploads path would 404.
+    url:      `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`,
     filename: req.file.filename,
     type,
     size:     req.file.size,

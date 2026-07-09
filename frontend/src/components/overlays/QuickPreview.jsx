@@ -18,9 +18,6 @@ export default function QuickPreview() {
             <div className="qp-grid">
               <div style={{ position: 'relative', borderRight: '1px solid var(--line)' }}>
                 <ProductMedia product={p} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14, background: 'linear-gradient(transparent, rgba(8,8,10,.9))' }}>
-                  <span className="chip chip-acc chip-dot">Hover to morph: artwork → stencil → skin</span>
-                </div>
               </div>
               <div style={{ padding: '26px 26px 28px', position: 'relative' }}>
                 <button className="icon-btn" style={{ position: 'absolute', top: 16, right: 16 }} onClick={s.closePreview}>

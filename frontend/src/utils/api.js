@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { PRODUCTS, CATEGORIES } from '../data/data';
+import { searchProducts } from './search';
 
 const http = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
 
@@ -58,6 +59,17 @@ export async function fetchProducts(params = {}) {
     return data;
   } catch {
     return applyFilters(PRODUCTS, params);
+  }
+}
+
+// Full single-product record (includes the `images` gallery, which the list
+// endpoint above omits to keep listing responses light).
+export async function fetchProduct(id) {
+  try {
+    const { data } = await http.get(`/products/${id}`);
+    return data;
+  } catch {
+    return PRODUCTS.find(p => p.id === id) || null;
   }
 }
 
@@ -206,7 +218,7 @@ export async function adminFetchBookings() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function applyFilters(products, { cat, brand, skill, maxPrice, sort, tags } = {}) {
+function applyFilters(products, { cat, brand, skill, maxPrice, sort, tags, search, limit } = {}) {
   let r = products.filter(p =>
     (cat      ? cat.split(',').includes(p.cat)     : true) &&
     (brand    ? brand.split(',').includes(p.brand) : true) &&
@@ -214,9 +226,11 @@ function applyFilters(products, { cat, brand, skill, maxPrice, sort, tags } = {}
     (maxPrice ? p.price <= Number(maxPrice)        : true) &&
     (tags     ? tags.split(',').some(t => (p.tags||[]).includes(t)) : true)
   );
+  if (search) r = searchProducts(r, search);
   if (sort === 'low')    r = [...r].sort((a,b) => a.price - b.price);
   else if (sort === 'high')   r = [...r].sort((a,b) => b.price - a.price);
   else if (sort === 'rating') r = [...r].sort((a,b) => b.rating - a.rating);
-  else r = [...r].sort((a,b) => (b.tags?.length||0) - (a.tags?.length||0));
+  else if (!search) r = [...r].sort((a,b) => (b.tags?.length||0) - (a.tags?.length||0));
+  if (limit) r = r.slice(0, Number(limit));
   return r;
 }

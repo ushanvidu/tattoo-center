@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { waLink } from '../../data/data';
 import Icons from '../shared/Icons';
+import SearchBar from './SearchBar';
 
 const NAV = [
   { to: '/',        label: 'Home' },
@@ -17,8 +18,10 @@ export default function Header() {
   const s        = useStore();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [solid, setSolid] = useState(false);
   const [mob,   setMob]   = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const f = () => setSolid(window.scrollY > 20);
@@ -26,6 +29,8 @@ export default function Header() {
     window.addEventListener('scroll', f, { passive: true });
     return () => window.removeEventListener('scroll', f);
   }, []);
+
+  useEffect(() => { setSearchOpen(false); }, [location.pathname]);
 
   const close = () => setMob(false);
 
@@ -35,10 +40,7 @@ export default function Header() {
         <div className="nav-inner">
 
           <Link to="/" className="logo" onClick={close}>
-            <div className="logo-serif-wrap">
-              <span className="logo-serif">TATTOO CENTER</span>
-              <small className="logo-serif-sub">PRO EQUIPMENT</small>
-            </div>
+            <img src="/logo.jpeg" alt="Tattoo Center" className="logo-img logo-img-lg" />
           </Link>
 
           <nav className="nav-menu">
@@ -50,6 +52,9 @@ export default function Header() {
           </nav>
 
           <div className="nav-actions">
+            <button className={`icon-btn ${searchOpen ? 'on' : ''}`} onClick={() => setSearchOpen(v => !v)} aria-label="Search">
+              {searchOpen ? <Icons.close /> : <Icons.search />}
+            </button>
             <a className="icon-btn hide-mob" href={waLink('Hi Tattoo Center, I have a quick question.')} target="_blank" rel="noreferrer" aria-label="WhatsApp">
               <Icons.wa />
             </a>
@@ -71,11 +76,19 @@ export default function Header() {
             </button>
           </div>
         </div>
+
+        {searchOpen && (
+          <div className="search-overlay-row">
+            <div className="wrap">
+              <SearchBar autoFocus onNavigate={() => setSearchOpen(false)} />
+            </div>
+          </div>
+        )}
       </header>
 
       <div className={`mob-menu ${mob ? 'open' : ''}`}>
         <div className="flex jb ac" style={{ marginBottom: 24 }}>
-          <span className="logo-serif" style={{ fontSize: 20 }}>TATTOO CENTER</span>
+          <img src="/logo.jpeg" alt="Tattoo Center" className="logo-img logo-img-lg" />
           <button className="icon-btn" onClick={close}><Icons.close /></button>
         </div>
         {NAV.map(({ to, label }) => (

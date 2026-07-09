@@ -1,16 +1,44 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES, FEATURED_CATS, TONE, waLink, fmt } from '../data/data';
+import { fetchProducts, fetchCategories } from '../utils/api';
 import Reveal from '../components/shared/Reveal';
 import Stars from '../components/shared/Stars';
-import MorphArt from '../components/shared/MorphArt';
 import ProductCard from '../components/shared/ProductCard';
-import BeforeAfter from '../components/shared/BeforeAfter';
 import Icons from '../components/shared/Icons';
 import { StencilSection } from './StencilPage';
 
+/* ── Hero showcase: cycles through real product photos instead of a static placeholder ── */
+function HeroShowcase({ products }) {
+  const shots = products.filter(p => p.thumbnail).slice(0, 6);
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    if (shots.length < 2) return;
+    const t = setInterval(() => setI(v => (v + 1) % shots.length), 2800);
+    return () => clearInterval(t);
+  }, [shots.length]);
+
+  if (!shots.length) {
+    return (
+      <div className="hero-fallback">
+        <img src="/logo.jpeg" alt="Tattoo Center" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="hero-showcase">
+      {shots.map((p, idx) => (
+        <img key={p._id || p.id} src={p.thumbnail} alt={p.name} className={`hero-showcase-img ${idx === i ? 'on' : ''}`} />
+      ))}
+    </div>
+  );
+}
+
 /* ── Hero ── */
-function Hero() {
+function Hero({ products }) {
   const s = useStore();
   return (
     <section className="hero grain">
@@ -20,7 +48,7 @@ function Hero() {
         <div>
           <Reveal>
             <div className="flex ac gap16 wrap-flex" style={{ marginBottom: 22 }}>
-              <span className="live-tag"><i />Live demo footage</span>
+              <span className="live-tag"><i />Live demos available</span>
               <span className="chip chip-acc chip-dot">Tested by pro artists</span>
             </div>
             <h1 className="h-mega">Print Perfect<br />Stencils in<br /><span className="text-acc">Seconds.</span></h1>
@@ -43,13 +71,11 @@ function Hero() {
           </Reveal>
         </div>
         <Reveal delay={120} className="hero-stack">
-          <div className="hero-vid ph ph-video">
+          <div className="hero-vid ph">
+            <HeroShowcase products={products} />
+            <div className="hero-vid-fade" />
             <div className="printhead" />
-            <span className="ph-label">REC ● PRINTER › STENCIL › SKIN</span>
-            <div className="play-badge"><i><Icons.play /></i></div>
-            <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-              <div className="morph-host" style={{ width: '62%' }}><MorphArt seed={0} tone="#10262a" /></div>
-            </div>
+            <span className="ph-label">PRINTER › STENCIL › SKIN</span>
           </div>
         </Reveal>
       </div>
@@ -62,56 +88,21 @@ function TrustStrip() {
   const items = [['bolt','8-second prints'],['shield','Lab-tested gear'],['truck','Island-wide delivery'],['wa','WhatsApp ordering']];
   return (
     <div style={{ borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', background: 'var(--bg-1)' }}>
-      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0 }}>
-        {items.map(([ic,t], i) => (
-          <div key={t} className="flex ac gap12" style={{ padding: '20px 18px', borderLeft: i ? '1px solid var(--line)' : 'none' }}>
-            <span style={{ color: 'var(--acc)' }}>{(() => { const Tag = Icons[ic]; return <Tag />; })()}</span>
+      <div className="wrap trust-strip">
+        {items.map(([ic,t]) => (
+          <div key={t} className="trust-item flex ac gap12">
+            <span style={{ color: 'var(--acc)', flexShrink: 0 }}>{(() => { const Tag = Icons[ic]; return <Tag />; })()}</span>
             <span style={{ fontFamily: 'var(--f-disp)', fontWeight: 600, textTransform: 'uppercase', fontSize: 14, letterSpacing: '.02em' }}>{t}</span>
           </div>
         ))}
       </div>
-      <style>{`@media(max-width:760px){.wrap>div[style*="repeat(4"]{grid-template-columns:1fr 1fr !important}.wrap>div[style*="repeat(4"]>div:nth-child(odd){border-left:none !important}}`}</style>
     </div>
   );
 }
 
-/* ── Difference Section ── */
-function DifferenceSection() {
-  return (
-    <section className="section">
-      <div className="wrap">
-        <Reveal className="section-head">
-          <span className="eyebrow">Hover stencil morph</span>
-          <h2 className="h1">See the Difference<br />Before You Print</h2>
-          <p className="lede">Every product card morphs through the real workflow on hover — original artwork, the converted stencil, and the final result on skin. Drag the slider to compare stencil clarity.</p>
-        </Reveal>
-        <Reveal>
-          <BeforeAfter
-            beforeLabel="Original" afterLabel="Stencil"
-            before={
-              <div className="ph" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'radial-gradient(circle at 40% 30%,#1a1330,#0a0a0d)' }}>
-                <div style={{ width: '46%' }}><MorphArt seed={1} tone="#1a1330" /></div>
-              </div>
-            }
-            after={
-              <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: '#0b0b0e' }}>
-                <svg viewBox="0 0 100 100" style={{ width: '46%' }}>
-                  <path d="M50 14 L62 38 L50 50 L38 38 Z M50 50 L74 50 L62 74 L50 62 Z M50 50 L50 86 M50 50 L26 50 L38 74 L50 62 M30 30 L50 50 M70 30 L50 50 M50 50 L34 70 M50 50 L66 70"
-                    fill="none" stroke="#00e0c6" strokeWidth="1.4" strokeLinecap="round"
-                    style={{ filter: 'drop-shadow(0 0 4px rgba(0,224,198,.7))' }} />
-                </svg>
-              </div>
-            }
-          />
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
 /* ── Category Grid ── */
-function CategoryGrid() {
-  const cats = FEATURED_CATS.map(id => CATEGORIES.find(c => c.id === id));
+function CategoryGrid({ products, categories }) {
+  const cats = FEATURED_CATS.map(id => categories.find(c => c.id === id) || CATEGORIES.find(c => c.id === id));
   return (
     <section className="section" style={{ background: 'var(--bg-1)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
       <div className="wrap">
@@ -121,15 +112,22 @@ function CategoryGrid() {
         </Reveal>
         <div className="cat-grid">
           {cats.map((c, i) => {
-            const count = PRODUCTS.filter(p => p.cat === c.id).length;
+            const count = products.filter(p => p.cat === c.id).length;
             return (
               <Reveal key={c.id} delay={i * 60} as={Link} to={`/shop/${c.id}`} className="cat-tile" style={{ textDecoration: 'none', display: 'block' }}>
-                <div className="ph" style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 100% at 70% 20%, ${TONE[c.id]}, #0a0a0d 75%)` }} />
+                {c.imageUrl ? (
+                  <>
+                    <img src={c.imageUrl} alt={c.short} className="cat-cover-img" />
+                    <div className="cat-cover-fade" />
+                  </>
+                ) : (
+                  <div className="ph" style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 100% at 70% 20%, ${TONE[c.id]}, #0a0a0d 75%)` }} />
+                )}
                 <div className="cat-scan" />
                 <div className="cat-body">
                   <div className="flex jb ac">
                     <div className="cat-ico">{(() => { const Tag = Icons[c.icon]; return <Tag />; })()}</div>
-                    <Icons.arrowUR style={{ color: 'var(--faint)' }} />
+                    <Icons.arrowUR style={{ width: 22, height: 22, color: 'var(--faint)' }} />
                   </div>
                   <div>
                     <div className="h3" style={{ fontSize: 21 }}>{c.short}</div>
@@ -184,9 +182,10 @@ function Workflow() {
 }
 
 /* ── Best Sellers ── */
-function BestSellers() {
+function BestSellers({ products }) {
   const s = useStore();
-  const best = PRODUCTS.filter(p => (p.tags || []).length).slice(0, 8);
+  const tagged = products.filter(p => (p.tags || []).length);
+  const best = (tagged.length ? tagged : products).slice(0, 8);
   return (
     <section className="section" style={{ background: 'var(--bg-1)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
       <div className="wrap">
@@ -197,7 +196,7 @@ function BestSellers() {
       </div>
       <div className="wrap">
         <div className="rail">
-          {best.map(p => <ProductCard key={p.id} product={p} onPreview={s.openPreview} />)}
+          {best.map(p => <ProductCard key={p.id || p._id} product={p} onPreview={s.openPreview} />)}
         </div>
       </div>
     </section>
@@ -322,7 +321,7 @@ function Testimonials() {
           <span className="eyebrow">Real customer experience</span>
           <h2 className="h1">Trusted in Studios</h2>
         </Reveal>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }} className="cat-grid">
+        <div className="cat-grid" style={{ gap: 18 }}>
           {qs.map(([n, r, q], i) => (
             <Reveal key={n} delay={i * 70} className="quote">
               <Stars value={5} />
@@ -362,14 +361,18 @@ function FinalCTA() {
 
 /* ── HomePage ── */
 export default function HomePage() {
+  const [products, setProducts] = useState(PRODUCTS);
+  const [categories, setCategories] = useState(CATEGORIES);
+  useEffect(() => { fetchProducts().then(setProducts).catch(() => {}); }, []);
+  useEffect(() => { fetchCategories().then(setCategories).catch(() => {}); }, []);
+
   return (
     <>
-      <Hero />
+      <Hero products={products} />
       <TrustStrip />
-      <DifferenceSection />
-      <CategoryGrid />
+      <CategoryGrid products={products} categories={categories} />
       <Workflow />
-      <BestSellers />
+      <BestSellers products={products} />
       <TestingLab />
       <StencilSection compact />
       <LiveDemoCall />

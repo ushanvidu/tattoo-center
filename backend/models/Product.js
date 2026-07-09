@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema({
   skill:     { type: String, default: 'All' },
   brand:     String,
   highlight: String,
+  description: { type: String, default: '' },
   tags:      [String],
   specs:     mongoose.Schema.Types.Mixed,
 

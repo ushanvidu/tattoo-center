@@ -1,17 +1,24 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { fmt, waLink } from '../../data/data';
-import { TONE } from '../../data/data';
+import { TONE, CATEGORIES } from '../../data/data';
 import Icons from './Icons';
 import Stars from './Stars';
-import MorphArt from './MorphArt';
 
 function ProductMedia({ product, style }) {
-  const seed = parseInt((product._id || product.id || '').replace(/\D/g, '')) || 0;
+  if (product.thumbnail) {
+    return (
+      <div className="pmedia" style={style}>
+        <img src={product.thumbnail} alt={product.name} />
+      </div>
+    );
+  }
   const tone = TONE[product.cat] || '#1a1a21';
+  const catDef = CATEGORIES.find(c => c.id === product.cat);
+  const Icon = Icons[catDef?.icon] || Icons.grid;
   return (
-    <div className="morph-host" style={{ position: 'relative', ...style }}>
-      <MorphArt seed={seed} tone={tone} />
+    <div className="media-ph" style={{ background: `radial-gradient(120% 100% at 30% 15%, ${tone}, #0a0a0d 80%)`, ...style }}>
+      <Icon />
     </div>
   );
 }

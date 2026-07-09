@@ -204,7 +204,7 @@ export default function CheckoutPage() {
           <h1 className="h1" style={{ fontSize: 36, marginTop: 8 }}>Complete Your Order</h1>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr minmax(0,380px)', gap: 40, alignItems: 'start' }}>
+        <div className="side-grid w380" style={{ gap: 40 }}>
 
           {/* ── Left column ── */}
           <div className="col gap24">
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
 
               {step === 1 ? (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                  <div className="form-grid-2" style={{ marginBottom: 14 }}>
                     <div className="field">
                       <label>Full Name *</label>
                       <input className="inp" value={name} onChange={e => setName(e.target.value)} placeholder="Kasun Perera" />

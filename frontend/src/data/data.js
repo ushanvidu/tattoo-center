@@ -56,8 +56,8 @@ export const PRODUCTS = [
   P({ name:'Barrier Film + Clip Cord Sleeves', cat:'accessories', sub:'Clip Cord Covers',    price:13,                                rating:4.4, reviews:60,  highlight:'Cross-contamination protection roll' }),
 ];
 
-export const WHATSAPP    = '94715367306';
-export const WA_DISPLAY  = '071 536 7306';
+export const WHATSAPP    = '94760336161';
+export const WA_DISPLAY  = '076 033 6161';
 
 export const fmt = (n) => 'Rs. ' + Number(n).toLocaleString('en-LK', { minimumFractionDigits: 0 });
 export const waLink = (text) => `https://wa.me/${WHATSAPP}?text=` + encodeURIComponent(text);

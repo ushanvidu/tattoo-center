@@ -37,10 +37,11 @@ export function StoreProvider({ children }) {
   }, [navigate]);
 
   const addToCart = useCallback((p, qty = 1) => {
+    const pid = p.id || p._id;
     setCart(c => {
-      const ex = c.find(i => i.id === p.id);
-      if (ex) return c.map(i => i.id === p.id ? { ...i, qty: i.qty + qty } : i);
-      return [...c, { ...p, qty }];
+      const ex = c.find(i => (i.id || i._id) === pid);
+      if (ex) return c.map(i => (i.id || i._id) === pid ? { ...i, qty: i.qty + qty } : i);
+      return [...c, { ...p, id: pid, qty }];
     });
     toast(`${p.name} added to cart`);
   }, [toast]);

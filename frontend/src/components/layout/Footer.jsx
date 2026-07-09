@@ -41,6 +41,7 @@ export default function Footer() {
         <div className="foot-grid">
           <div>
             <Link to="/" className="logo" style={{ marginBottom: 16, display: 'inline-flex' }}>
+              <img src="/logo.jpeg" alt="Tattoo Center" className="logo-img" />
               <div className="logo-txt">TATTOO CENTER<small>PRO EQUIPMENT</small></div>
             </Link>
             <p className="text-dim" style={{ maxWidth: '34ch', fontSize: 14, marginTop: 16 }}>

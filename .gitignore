@@ -13,6 +13,9 @@ build/
 # User-uploaded runtime data
 backend/public/uploads/
 
+# Source reference material (supplier docs), not app code
+/Documents/
+
 # macOS
 .DS_Store
 

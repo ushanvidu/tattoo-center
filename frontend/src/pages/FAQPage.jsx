@@ -98,7 +98,7 @@ export default function FAQPage() {
       </div>
 
       <div className="wrap section">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 48, alignItems: 'start' }}>
+        <div className="side-grid">
 
           {/* Q&A list */}
           <div>

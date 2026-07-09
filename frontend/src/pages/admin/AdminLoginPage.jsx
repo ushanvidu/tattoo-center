@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
 
         {/* logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg,#00e0c6,#00b4d8)', marginBottom: 16, fontSize: 24, fontWeight: 900, color: '#000' }}>T</div>
+          <img src="/logo.jpeg" alt="Tattoo Center" style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 16, objectFit: 'cover' }} />
           <h1 style={{ fontFamily: "'Cinzel','Trajan Pro',serif", fontSize: 20, letterSpacing: '.12em', color: '#fff', margin: 0, textTransform: 'uppercase' }}>Tattoo Center</h1>
           <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', marginTop: 4, fontFamily: 'monospace' }}>Admin Panel</p>
         </div>

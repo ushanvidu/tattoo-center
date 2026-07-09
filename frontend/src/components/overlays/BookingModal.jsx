@@ -89,7 +89,7 @@ export default function BookingModal() {
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div className="form-grid-2" style={{ marginBottom: 14 }}>
                 <div className="field"><label>Name</label><input className="inp" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} /></div>
                 <div className="field"><label>Phone / WhatsApp</label><input className="inp" placeholder="07X XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} /></div>
               </div>

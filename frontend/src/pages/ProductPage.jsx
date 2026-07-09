@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS, CATEGORIES, fmt, waLink } from '../data/data';
-import { fetchProducts } from '../utils/api';
-import ProductCard, { ProductMedia } from '../components/shared/ProductCard';
-import BeforeAfter from '../components/shared/BeforeAfter';
+import { PRODUCTS, CATEGORIES, TONE, fmt, waLink } from '../data/data';
+import { fetchProducts, fetchProduct } from '../utils/api';
+import ProductCard from '../components/shared/ProductCard';
 import Stars from '../components/shared/Stars';
 import Reveal from '../components/shared/Reveal';
 import Icons from '../components/shared/Icons';
@@ -14,15 +13,19 @@ export default function ProductPage() {
   const s          = useStore();
   const navigate   = useNavigate();
   const [products, setProducts] = useState(PRODUCTS);
+  const [detail,   setDetail]   = useState(null);
   const [qty,      setQty]      = useState(1);
   const [imgIdx,   setImgIdx]   = useState(0);
 
+  const matchId = p => p.id === id || String(p._id) === id;
+
   useEffect(() => {
     fetchProducts().then(setProducts).catch(() => {});
+    fetchProduct(id).then(setDetail).catch(() => {});
     setQty(1); setImgIdx(0); window.scrollTo({ top: 0, behavior: 'auto' });
   }, [id]);
 
-  const product = products.find(p => p.id === id) || PRODUCTS.find(p => p.id === id);
+  const product = (detail && matchId(detail) ? detail : null) || products.find(matchId) || PRODUCTS.find(matchId);
   if (!product) return (
     <div className="wrap section col ac jc" style={{ gap: 16, textAlign: 'center', paddingTop: 'calc(var(--nav-h) + 60px)' }}>
       <h2 className="h2">Product not found</h2>
@@ -30,13 +33,14 @@ export default function ProductPage() {
     </div>
   );
 
+  const productId = product.id || product._id;
   const cat      = CATEGORIES.find(c => c.id === product.cat);
-  const related  = products.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4);
+  const related  = products.filter(p => p.cat === product.cat && (p.id || p._id) !== productId).slice(0, 4);
   const specs    = product.specs || {};
   const hasSpecs = Object.keys(specs).length > 0;
-  const isWished = s.wishlist.includes(product.id);
+  const isWished = s.wishlist.includes(productId);
 
-  const images   = [null, null, null]; // placeholders — swap with real image URLs
+  const images = product.images && product.images.length ? product.images : [];
 
   const waMsg = `Hi Tattoo Center, I would like to order:\n• ${product.name} — ${fmt(product.price)}\nPlease confirm availability.`;
 
@@ -56,24 +60,34 @@ export default function ProductPage() {
 
       {/* main layout */}
       <div className="wrap section" style={{ paddingTop: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }} className="product-grid">
+        <div className="product-grid">
 
           {/* Left: image gallery */}
           <div>
-            <div className="ph" style={{ borderRadius: 'var(--r-lg)', aspectRatio: '1/1', border: '1px solid var(--line-2)' }}>
-              <span className="ph-label">{product.name}</span>
-              <div className="printhead" />
-              <div className="morph-host morph" style={{ width: '100%', height: '100%' }}>
-                <MorphArtInline cat={product.cat} />
+            {images.length ? (
+              <div style={{ borderRadius: 'var(--r-lg)', aspectRatio: '1/1', overflow: 'hidden', border: '1px solid var(--line-2)' }}>
+                <img src={images[imgIdx] || images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-            </div>
-            <div className="flex gap8" style={{ marginTop: 12 }}>
-              {images.map((_, i) => (
-                <div key={i} onClick={() => setImgIdx(i)} className="ph" style={{ flex: '0 0 80px', height: 80, borderRadius: 10, border: `1px solid ${imgIdx === i ? 'var(--acc)' : 'var(--line)'}`, cursor: 'pointer' }}>
-                  <span className="ph-label" style={{ fontSize: 8, padding: '2px 5px' }}>img {i + 1}</span>
-                </div>
-              ))}
-            </div>
+            ) : (
+              <div
+                className="media-ph"
+                style={{
+                  borderRadius: 'var(--r-lg)', aspectRatio: '1/1', border: '1px solid var(--line-2)',
+                  background: `radial-gradient(120% 100% at 30% 15%, ${TONE[product.cat] || '#1a1a21'}, #0a0a0d 80%)`,
+                }}
+              >
+                {(() => { const Icon = Icons[cat?.icon] || Icons.grid; return <Icon />; })()}
+              </div>
+            )}
+            {images.length > 1 && (
+              <div className="flex gap8" style={{ marginTop: 12 }}>
+                {images.map((src, i) => (
+                  <div key={i} onClick={() => setImgIdx(i)} style={{ flex: '0 0 80px', height: 80, borderRadius: 10, overflow: 'hidden', border: `1px solid ${imgIdx === i ? 'var(--acc)' : 'var(--line)'}`, cursor: 'pointer' }}>
+                    <img src={src} alt={`${product.name} ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: product info */}
@@ -83,7 +97,7 @@ export default function ProductPage() {
               {product.tags?.includes('new')        && <span className="chip" style={{ marginBottom: 10, marginLeft: 6 }}>New Arrival</span>}
               <h1 className="h1" style={{ fontSize: 'clamp(22px,3vw,36px)', marginBottom: 8 }}>{product.name}</h1>
               <div className="flex ac gap10" style={{ marginBottom: 12 }}>
-                <Stars rating={product.rating} />
+                <Stars value={product.rating} />
                 <span className="text-dim mono" style={{ fontSize: 11.5 }}>{product.rating} · {product.reviews} reviews</span>
               </div>
               <div className="flex ac gap12">
@@ -113,7 +127,7 @@ export default function ProductPage() {
               <button className="btn btn-acc" style={{ flex: 1, height: 48 }} onClick={() => { s.addToCart(product, qty); }}>
                 <Icons.cart /> Add to Cart
               </button>
-              <button className={`icon-btn ${isWished ? 'on' : ''}`} style={{ width: 48, height: 48, flexShrink: 0, borderColor: isWished ? 'var(--danger)' : undefined, color: isWished ? 'var(--danger)' : undefined }} onClick={() => s.toggleWish(product.id)}>
+              <button className={`icon-btn ${isWished ? 'on' : ''}`} style={{ width: 48, height: 48, flexShrink: 0, borderColor: isWished ? 'var(--danger)' : undefined, color: isWished ? 'var(--danger)' : undefined }} onClick={() => s.toggleWish(productId)}>
                 <Icons.heart />
               </button>
             </div>
@@ -124,6 +138,13 @@ export default function ProductPage() {
             <button className="btn btn-ghost btn-block" onClick={() => s.openBooking(product)}>
               <Icons.cal /> Book Live Demo for This Product
             </button>
+
+            {product.description && (
+              <div>
+                <h3 className="h3" style={{ fontSize: 14, marginBottom: 10 }}>Description</h3>
+                <p className="text-dim" style={{ fontSize: 13.5, lineHeight: 1.7 }}>{product.description}</p>
+              </div>
+            )}
 
             {/* specs */}
             {hasSpecs && (
@@ -143,37 +164,17 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Before / After stencil clarity */}
-      <div className="wrap section" style={{ paddingTop: 0 }}>
-        <Reveal>
-          <h2 className="h2" style={{ marginBottom: 24 }}>See the Difference</h2>
-          <BeforeAfter />
-        </Reveal>
-      </div>
-
       {/* related */}
       {related.length > 0 && (
         <div className="wrap section" style={{ paddingTop: 0 }}>
           <Reveal>
             <h2 className="h2" style={{ marginBottom: 24 }}>Related Products</h2>
             <div className="pgrid">
-              {related.map(p => <ProductCard key={p.id} product={p} />)}
+              {related.map(p => <ProductCard key={p.id || p._id} product={p} />)}
             </div>
           </Reveal>
         </div>
       )}
     </div>
-  );
-}
-
-function MorphArtInline({ cat }) {
-  const colors = { printers: '#00E0C6', machines: '#7C5CFF', needles: '#00E0C6', inks: '#FF5D5D', stencil: '#00E0C6' };
-  const accent = colors[cat] || '#00E0C6';
-  return (
-    <svg viewBox="0 0 200 200" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: .35 }}>
-      <defs><radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={accent} stopOpacity=".6" /><stop offset="100%" stopColor={accent} stopOpacity="0" /></radialGradient></defs>
-      <circle cx="100" cy="100" r="80" fill="url(#rg)" />
-      <circle cx="100" cy="100" r="50" fill="none" stroke={accent} strokeWidth=".8" strokeDasharray="4 3" opacity=".5" />
-    </svg>
   );
 }

@@ -45,6 +45,14 @@ export default function AnnouncementBar() {
     return () => clearInterval(timerRef.current);
   }, [visible, items.length, go]);
 
+  /* Keep layout in sync: when the bar is hidden/dismissed, collapse --bar-h so
+     the nav and page content move up instead of leaving a 40px gap. */
+  useEffect(() => {
+    const show = visible && items.length > 0;
+    document.documentElement.style.setProperty('--bar-h', show ? '40px' : '0px');
+    return () => document.documentElement.style.setProperty('--bar-h', '0px');
+  }, [visible, items.length]);
+
   if (!visible || items.length === 0) return null;
 
   const item  = items[index];
@@ -62,7 +70,7 @@ export default function AnnouncementBar() {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100,
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60, /* below nav (80) and drawers/menus (90+) */
       background: theme.bg,
       height: 40,
       display: 'flex', alignItems: 'center',

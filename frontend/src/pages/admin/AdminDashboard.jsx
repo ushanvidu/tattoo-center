@@ -49,7 +49,7 @@ const NAV = [
 
 function Sidebar({ active, setActive, admin, logout }) {
   return (
-    <div style={{ width:220, flexShrink:0, height:'100vh', position:'sticky', top:0, display:'flex', flexDirection:'column', background:'rgba(255,255,255,.03)', borderRight:'1px solid rgba(255,255,255,.07)' }}>
+    <div className="admin-side" style={{ width:220, flexShrink:0, height:'100vh', position:'sticky', top:0, display:'flex', flexDirection:'column', background:'rgba(255,255,255,.03)', borderRight:'1px solid rgba(255,255,255,.07)' }}>
       <div style={{ padding:'24px 20px 20px', borderBottom:'1px solid rgba(255,255,255,.06)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#00e0c6,#00b4d8)', display:'grid', placeItems:'center', fontWeight:900, color:'#000', fontSize:16 }}>T</div>
@@ -59,7 +59,7 @@ function Sidebar({ active, setActive, admin, logout }) {
           </div>
         </div>
       </div>
-      <div style={{ flex:1, padding:'12px 10px', overflowY:'auto' }}>
+      <div className="admin-side-nav" style={{ flex:1, padding:'12px 10px', overflowY:'auto' }}>
         {NAV.map(({ id, icon, label }) => (
           <button key={id} onClick={() => setActive(id)}
             style={{ width:'100%', textAlign:'left', display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:9, border:'none', cursor:'pointer', marginBottom:3, transition:'.15s',
@@ -318,7 +318,7 @@ function ProductsPanel() {
         <Modal title={editing==='new'?'Add New Product':'Edit Product'} onClose={() => setEditing(null)} wide>
           {/* ── Basic info ── */}
           <SectionHead>Basic Information</SectionHead>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:14, marginBottom:20 }}>
             <ModalField label="Product Name *" colSpan>
               <input className="inp" style={darkInp} value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Mirage M1 Stencil Printer" />
             </ModalField>
@@ -342,7 +342,7 @@ function ProductsPanel() {
 
           {/* ── Pricing & stock ── */}
           <SectionHead>Pricing & Stock</SectionHead>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:14, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px,1fr))', gap:14, marginBottom:20 }}>
             <ModalField label="Price ($) *">
               <input className="inp" style={darkInp} type="number" min="0" step="0.01" value={form.price} onChange={e => setForm(f=>({...f,price:e.target.value}))} placeholder="0.00" />
             </ModalField>
@@ -361,7 +361,7 @@ function ProductsPanel() {
 
           {/* ── Tags & skill ── */}
           <SectionHead>Tags & Skill Level</SectionHead>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:14, marginBottom:20 }}>
             <ModalField label="Skill Level">
               <select className="inp" style={darkInp} value={form.skill||'All'} onChange={e => setForm(f=>({...f,skill:e.target.value}))}>
                 {['All','Beginner','Intermediate','Professional'].map(s=><option key={s}>{s}</option>)}
@@ -902,9 +902,9 @@ export default function AdminDashboard() {
   const Panel = PANELS[active] || OverviewPanel;
 
   return (
-    <div style={{ display:'flex',minHeight:'100vh',background:'#0d0d12',color:'#fff',fontFamily:"'Space Grotesk','Inter',sans-serif" }}>
+    <div className="admin-shell" style={{ display:'flex',minHeight:'100vh',background:'#0d0d12',color:'#fff',fontFamily:"'Space Grotesk','Inter',sans-serif" }}>
       <Sidebar active={active} setActive={setActive} admin={admin} logout={logout} />
-      <main style={{ flex:1,padding:'32px 36px',overflowY:'auto',minHeight:'100vh' }}>
+      <main className="admin-main" style={{ flex:1,minWidth:0,padding:'32px 36px',overflowY:'auto',minHeight:'100vh' }}>
         <Panel />
       </main>
     </div>

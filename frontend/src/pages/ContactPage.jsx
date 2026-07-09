@@ -17,14 +17,14 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     const text = `*Contact Form*%0AName: ${name}%0AEmail: ${email}%0AProduct: ${product || 'N/A'}%0ADemo: ${demo ? 'Yes' : 'No'}%0A%0A${message}`;
-    window.open(`https://wa.me/94715367306?text=${text}`, '_blank');
+    window.open(`https://wa.me/94760336161?text=${text}`, '_blank');
     await new Promise(r => setTimeout(r, 800));
     setDone(true); setLoading(false);
   }
 
   const INFO = [
     { icon: <Icons.wa />,    label: 'WhatsApp',    value: WA_DISPLAY,              href: waLink('Hi Tattoo Center!') },
-    { icon: <Icons.phone />, label: 'Phone',       value: '+94 71 536 7306',       href: 'tel:+94715367306' },
+    { icon: <Icons.phone />, label: 'Phone',       value: '+94 76 033 6161',       href: 'tel:+94760336161' },
     { icon: <Icons.mail />,  label: 'Email',       value: 'info@tattoo-center.lk', href: 'mailto:info@tattoo-center.lk' },
     { icon: <Icons.pin />,   label: 'Location',    value: 'Colombo, Sri Lanka',    href: null },
   ];
@@ -41,7 +41,7 @@ export default function ContactPage() {
       </div>
 
       <div className="wrap section">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 440px', gap: 48 }}>
+        <div className="side-grid w440">
 
           {/* form */}
           <Reveal>
@@ -57,7 +57,7 @@ export default function ContactPage() {
             ) : (
               <form onSubmit={submit} className="col gap16">
                 <h2 className="h2" style={{ fontSize: 26, marginBottom: 4 }}>Send Us a Message</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-grid-2">
                   <div className="field"><label>Name *</label><input className="inp" required value={name} onChange={e => setName(e.target.value)} placeholder="Your name" /></div>
                   <div className="field"><label>Email *</label><input className="inp" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></div>
                 </div>

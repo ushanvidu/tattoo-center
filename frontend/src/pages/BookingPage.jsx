@@ -71,7 +71,7 @@ export default function BookingPage() {
       </div>
 
       <div className="wrap section">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 48, alignItems: 'start' }}>
+        <div className="side-grid">
 
           {done ? (
             <div className="card card-pad col ac jc" style={{ gap: 18, textAlign: 'center', padding: '64px 32px', gridColumn: '1 / -1' }}>
@@ -96,11 +96,11 @@ export default function BookingPage() {
               {/* mode */}
               <div>
                 <h2 className="h3" style={{ marginBottom: 14 }}>1. Choose Demo Type</h2>
-                <div className="flex gap12">
-                  <button type="button" className={`btn ${mode === 'whatsapp' ? 'btn-acc' : 'btn-solid'}`} style={{ flex: 1 }} onClick={() => setMode('whatsapp')}>
+                <div className="flex gap12 wrap-flex">
+                  <button type="button" className={`btn ${mode === 'whatsapp' ? 'btn-acc' : 'btn-solid'}`} style={{ flex: '1 1 220px' }} onClick={() => setMode('whatsapp')}>
                     <Icons.wa /> WhatsApp Video Demo
                   </button>
-                  <button type="button" className={`btn ${mode === 'studio' ? 'btn-acc' : 'btn-solid'}`} style={{ flex: 1 }} onClick={() => setMode('studio')}>
+                  <button type="button" className={`btn ${mode === 'studio' ? 'btn-acc' : 'btn-solid'}`} style={{ flex: '1 1 220px' }} onClick={() => setMode('studio')}>
                     <Icons.pin /> Studio Visit
                   </button>
                 </div>
@@ -135,7 +135,7 @@ export default function BookingPage() {
               {/* contact */}
               <div>
                 <h2 className="h3" style={{ marginBottom: 14 }}>4. Your Details</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-grid-2">
                   <div className="field"><label>Full Name *</label><input className="inp" required value={name} onChange={e => setName(e.target.value)} placeholder="Your name" /></div>
                   <div className="field"><label>Phone / WhatsApp *</label><input className="inp" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="07X XXX XXXX" /></div>
                   <div className="field" style={{ gridColumn: '1/-1' }}><label>Email</label><input className="inp" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Optional" /></div>
