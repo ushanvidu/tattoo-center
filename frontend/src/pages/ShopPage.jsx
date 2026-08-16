@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS, CATEGORIES, BRANDS, fmt } from '../data/data';
+import { PRODUCTS, CATEGORIES, BRANDS, fmt, SHOW_PRICES } from '../data/data';
 import { fetchProducts } from '../utils/api';
 import { searchProducts } from '../utils/search';
 import ProductCard from '../components/shared/ProductCard';
@@ -109,11 +109,13 @@ export default function ShopPage() {
               {CATEGORIES.map(c => <FOpt key={c.id} on={cats.includes(c.id)} onClick={() => toggle(cats, setCats, c.id)} label={c.short} count={catCount(c.id)} />)}
             </div>
 
-            <div className="fgroup">
-              <h4>Price range <span className="mono text-acc" style={{ fontSize: 12 }}>≤ {fmt(effectiveMaxPrice)}</span></h4>
-              <input type="range" min="0" max={priceCeil} value={effectiveMaxPrice} onChange={e => setMaxPrice(+e.target.value)} style={{ width: '100%' }} />
-              <div className="flex jb mono text-dim" style={{ fontSize: 11, marginTop: 8 }}><span>{fmt(0)}</span><span>{fmt(priceCeil)}</span></div>
-            </div>
+            {SHOW_PRICES && (
+              <div className="fgroup">
+                <h4>Price range <span className="mono text-acc" style={{ fontSize: 12 }}>≤ {fmt(effectiveMaxPrice)}</span></h4>
+                <input type="range" min="0" max={priceCeil} value={effectiveMaxPrice} onChange={e => setMaxPrice(+e.target.value)} style={{ width: '100%' }} />
+                <div className="flex jb mono text-dim" style={{ fontSize: 11, marginTop: 8 }}><span>{fmt(0)}</span><span>{fmt(priceCeil)}</span></div>
+              </div>
+            )}
 
             <div className="fgroup">
               <h4>Skill level</h4>
@@ -159,8 +161,8 @@ export default function ShopPage() {
                 <span className="text-dim mono hide-mob" style={{ fontSize: 11, letterSpacing: '.12em' }}>SORT</span>
                 <select className="inp" style={{ width: 'auto', padding: '10px 14px' }} value={sort} onChange={e => setSort(e.target.value)}>
                   <option value="featured">Featured</option>
-                  <option value="low">Price: Low to High</option>
-                  <option value="high">Price: High to Low</option>
+                  {SHOW_PRICES && <option value="low">Price: Low to High</option>}
+                  {SHOW_PRICES && <option value="high">Price: High to Low</option>}
                   <option value="rating">Top Rated</option>
                 </select>
               </div>

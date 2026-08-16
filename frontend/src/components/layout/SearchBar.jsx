@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchProducts } from '../../utils/api';
-import { fmt } from '../../data/data';
+import { fmt, SHOW_PRICES } from '../../data/data';
 import { CATEGORIES } from '../../data/data';
 import Icons from '../shared/Icons';
 
@@ -106,7 +106,7 @@ export default function SearchBar({ onNavigate, autoFocus }) {
                   </span>
                   <span className="search-item-info">
                     <span className="search-item-name">{p.name}</span>
-                    <span className="search-item-meta mono">{CATEGORIES.find(c => c.id === p.cat)?.short || p.cat} · {fmt(p.price)}</span>
+                    <span className="search-item-meta mono">{CATEGORIES.find(c => c.id === p.cat)?.short || p.cat}{SHOW_PRICES ? ` · ${fmt(p.price)}` : ''}</span>
                   </span>
                 </button>
               ))}

@@ -4,7 +4,7 @@ const jwt         = require('jsonwebtoken');
 const rateLimit   = require('express-rate-limit');
 const User        = require('../models/User');
 
-const SECRET  = process.env.JWT_SECRET || 'tc_jwt_secret_2026_secure';
+const SECRET  = process.env.JWT_SECRET;
 const BCRYPT_ROUNDS = 12;
 
 // Strict rate limit on auth endpoints — 10 attempts per 15 min per IP

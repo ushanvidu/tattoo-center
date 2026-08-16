@@ -24,13 +24,21 @@ function relevance(product, search) {
 // Public: list with filters
 router.get('/', async (req, res) => {
   try {
-    const { cat, brand, skill, maxPrice, sort, search, tags, limit } = req.query;
+    const { cat, brand, skill, maxPrice, sort, search, tags, limit, full } = req.query;
+    // Query params arrive as strings; anything else (?cat[$ne]=x, ?cat[]=a)
+    // is a client sending an object/array, which used to crash .split().
+    const csv = (v) => (typeof v === 'string' && v ? v.split(',') : null);
     const q = {};
-    if (cat)      q.cat    = { $in: cat.split(',') };
-    if (brand)    q.brand  = { $in: brand.split(',') };
-    if (skill)    q.skill  = { $in: skill.split(',') };
-    if (maxPrice) q.price  = { $lte: Number(maxPrice) };
-    if (tags)     q.tags   = { $in: tags.split(',') };
+    const catList = csv(cat), brandList = csv(brand), skillList = csv(skill), tagList = csv(tags);
+    if (catList)   q.cat   = { $in: catList };
+    if (brandList) q.brand = { $in: brandList };
+    if (skillList) q.skill = { $in: skillList };
+    if (tagList)   q.tags  = { $in: tagList };
+    if (maxPrice !== undefined && maxPrice !== '') {
+      const cap = Number(maxPrice);
+      if (!Number.isFinite(cap)) return res.status(400).json({ error: 'maxPrice must be a number.' });
+      q.price = { $lte: cap };
+    }
     if (search) {
       const re = { $regex: escapeRegex(search), $options: 'i' };
       q.$or = SEARCH_FIELDS.map(field => ({ [field]: re }));
@@ -43,10 +51,11 @@ router.get('/', async (req, res) => {
     else if (!search) sortOpt = { createdAt: 1 };
 
     // The gallery `images` array holds full base64 data URIs — leave it out of
-    // list responses (ProductCard only needs `thumbnail`); the single-product
-    // route below returns it in full.
-    let query = Product.find(q).select('-images').sort(sortOpt);
-    let products = await query;
+    // list responses (ProductCard only needs `thumbnail`). The admin panel asks
+    // for ?full=1, because editing a product re-submits this object and an
+    // omitted gallery would be saved back as an empty array, destroying it.
+    const projection = full === '1' ? {} : { images: 0 };
+    let products = await Product.find(q, projection).sort(sortOpt);
 
     if (search && !sort) {
       products = products
@@ -54,22 +63,25 @@ router.get('/', async (req, res) => {
         .sort((a, b) => b.s - a.s)
         .map(x => x.p);
     }
-    if (limit) products = products.slice(0, Number(limit));
+    if (limit !== undefined && limit !== '') {
+      const n = parseInt(limit, 10);
+      if (Number.isFinite(n) && n > 0) products = products.slice(0, n);
+    }
 
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Could not load products.' });
   }
 });
 
 // Public: single product
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).catch(() => null);
     if (!product) return res.status(404).json({ error: 'Not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(404).json({ error: 'Not found' });
   }
 });
 

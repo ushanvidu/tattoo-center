@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true, trim: true },
   phone:    { type: String, default: '' },
   role:     { type: String, default: 'customer', enum: ['customer', 'admin'] },
+  signupDiscountUsed: { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Never return the password hash in JSON responses

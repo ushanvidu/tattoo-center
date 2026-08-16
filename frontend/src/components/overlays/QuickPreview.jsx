@@ -1,5 +1,5 @@
 import { useStore } from '../../context/StoreContext';
-import { fmt, waLink, CATEGORIES } from '../../data/data';
+import { fmt, waLink, CATEGORIES, SHOW_PRICES } from '../../data/data';
 import { ProductMedia } from '../shared/ProductCard';
 import Stars from '../shared/Stars';
 import Icons from '../shared/Icons';
@@ -32,7 +32,7 @@ export default function QuickPreview() {
                   {p.highlight}. Tested by professional artists for vibration, flow and transfer quality before it reaches your studio.
                 </p>
                 <div className="flex ac gap16" style={{ marginBottom: 18 }}>
-                  <div className="price" style={{ fontSize: 34 }}>{fmt(p.price)}{p.old && <s>{fmt(p.old)}</s>}</div>
+                  {SHOW_PRICES && <div className="price" style={{ fontSize: 34 }}>{fmt(p.price)}{p.old && <s>{fmt(p.old)}</s>}</div>}
                   <span className="chip chip-acc chip-dot">{p.stock}</span>
                 </div>
                 {p.specs && (
@@ -49,7 +49,9 @@ export default function QuickPreview() {
                   <button className="btn btn-acc" style={{ flex: '1 1 auto' }} onClick={() => s.addToCart(p)}>
                     <Icons.cart /> Add to Cart
                   </button>
-                  <a className="btn btn-wa" href={waLink(`Hi Tattoo Center, I'd like to order ${p.name} (${fmt(p.price)}).`)} target="_blank" rel="noreferrer">
+                  <a className="btn btn-wa" href={waLink(SHOW_PRICES
+                    ? `Hi Tattoo Center, I'd like to order ${p.name} (${fmt(p.price)}).`
+                    : `Hi Tattoo Center, I'd like to order ${p.name}. Please share the price.`)} target="_blank" rel="noreferrer">
                     <Icons.wa />
                   </a>
                   <button className="btn btn-ghost" onClick={() => { s.closePreview(); s.openBooking(p); }}>

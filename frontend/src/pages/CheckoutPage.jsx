@@ -10,6 +10,16 @@ const SHIPPING      = 350;
 const PAYHERE_URL_SANDBOX = 'https://sandbox.payhere.lk/pay/checkout';
 const PAYHERE_URL_LIVE    = 'https://www.payhere.lk/pay/checkout';
 
+// PayHere's webhook is server-to-server, so notify_url must point at the API
+// host, not the site the customer is browsing.
+const API_BASE   = import.meta.env.VITE_API_URL || '';
+const API_ORIGIN = API_BASE ? API_BASE.replace(/\/api\/?$/, '') : window.location.origin;
+
+// Going live is a config change (set VITE_PAYHERE_SANDBOX=false), not a code
+// edit — this used to be hardcoded true, which would have loaded the sandbox
+// SDK against live merchant credentials.
+const PAYHERE_SANDBOX = import.meta.env.VITE_PAYHERE_SANDBOX !== 'false';
+
 /* ── small helper: load PayHere SDK script once ── */
 function usePayhereScript(sandbox) {
   const loaded = useRef(false);
@@ -53,7 +63,7 @@ function KokoInstallments({ total }) {
 
 export default function CheckoutPage() {
   const s        = useStore();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [name,      setName]      = useState(user?.fullName || '');
@@ -65,10 +75,17 @@ export default function CheckoutPage() {
   const [payMethod, setPayMethod] = useState('payhere');
   const [error,     setError]     = useState('');
   const [paying,    setPaying]    = useState(false);
+  const [info,      setInfo]      = useState('');
 
   const shipping = SHIPPING;
   const subtotal = s.cartTotal;
-  const total    = subtotal + shipping;
+  // One-time 10% signup discount — only for logged-in users who haven't used
+  // it yet. Enforced server-side too (see handlePayhere): the backend
+  // atomically re-verifies and consumes it at the payhere-hash step, the
+  // real gate before payment, not just here for display.
+  const discountEligible = !!(user && !user.signupDiscountUsed);
+  const discount = discountEligible ? Math.round(subtotal * 0.10) : 0;
+  const total    = subtotal - discount + shipping;
 
   /* Sync user data when it loads from auth storage */
   useEffect(() => {
@@ -78,7 +95,7 @@ export default function CheckoutPage() {
   }, [user]); // eslint-disable-line
 
   /* Load PayHere JS SDK */
-  usePayhereScript(true); // set false once going live
+  usePayhereScript(PAYHERE_SANDBOX);
 
   if (s.cart.length === 0) {
     return (
@@ -108,18 +125,29 @@ export default function CheckoutPage() {
     setPaying(true);
     setError('');
     try {
-      const orderId = `TC-${Date.now()}`;
-      const { hash, merchant_id, sandbox } = await getPayhereHash(orderId, total);
+      // Create the order first, as 'pending'. The server prices it from the
+      // catalog and is the only thing that can later mark it paid — so a
+      // closed tab or a failed callback can no longer lose a paid order.
+      const order = await createOrder({
+        items: s.cart.map(i => ({ productId: i.id || i._id, qty: i.qty })),
+        name, email, phone, address, city,
+        paymentMethod: 'payhere',
+      });
+      const orderId = order._id;
+
+      // Amount comes back from the server, signed — never computed here.
+      const hashRes = await getPayhereHash(orderId, 'LKR');
+      const { hash, merchant_id, sandbox, amount: payAmount } = hashRes;
 
       const payment = {
         sandbox,
         merchant_id,
         return_url:  `${window.location.origin}/order-confirm/${orderId}`,
         cancel_url:  `${window.location.origin}/checkout`,
-        notify_url:  `${window.location.origin.replace('5173', '5001')}/api/payment/payhere-notify`,
+        notify_url:  `${API_ORIGIN}/api/payment/payhere-notify`,
         order_id:    orderId,
         items:       `Tattoo Center Order (${s.cart.length} item${s.cart.length > 1 ? 's' : ''})`,
-        amount:      total.toFixed(2),
+        amount:      payAmount,
         currency:    'LKR',
         hash,
         first_name:  name.split(' ')[0] || name,
@@ -133,19 +161,12 @@ export default function CheckoutPage() {
 
       /* Set up event handlers on window.payhere */
       if (window.payhere) {
-        window.payhere.onCompleted = async (pid) => {
-          try {
-            const order = await createOrder({
-              items: s.cart, total, name, email, phone, address, city,
-              user_id: user?.id, payhere_id: pid, payment_method: 'payhere',
-              status: 'paid',
-            });
-            s.clearCart();
-            navigate(`/order-confirm/${order._id || orderId}`);
-          } catch {
-            s.clearCart();
-            navigate(`/order-confirm/${orderId}`);
-          }
+        window.payhere.onCompleted = () => {
+          // The order already exists and PayHere's webhook marks it paid —
+          // nothing to write here, so a dropped connection can't lose it.
+          refreshUser();
+          s.clearCart();
+          navigate(`/order-confirm/${orderId}`);
         };
         window.payhere.onDismissed = () => {
           setError('Payment was cancelled. You can try again.');
@@ -176,23 +197,13 @@ export default function CheckoutPage() {
     }
   }
 
-  /* ── Koko payment (placeholder until merchant account activated) ── */
+  /* ── Koko payment — not live yet ── */
   async function handleKoko() {
-    setPaying(true);
+    // Koko has no merchant account yet, so there is nothing to charge against.
+    // This used to create a real order on every click (duplicating on each
+    // press) and report success through the red error style.
     setError('');
-    try {
-      const orderId = `TC-KOKO-${Date.now()}`;
-      await createOrder({
-        items: s.cart, total, name, email, phone, address, city,
-        user_id: user?.id, payment_method: 'koko', status: 'pending',
-      });
-      // Once Koko merchant account is active, redirect to Koko checkout here
-      setError('Koko BNPL is available — please contact us on WhatsApp to complete your installment plan order.');
-    } catch {
-      setError('Could not create order. Please try WhatsApp ordering.');
-    } finally {
-      setPaying(false);
-    }
+    setInfo('Koko instalments are coming soon. Message us on WhatsApp and we\'ll set up your instalment plan manually.');
   }
 
   return (
@@ -336,6 +347,9 @@ export default function CheckoutPage() {
                         }}>{m}</span>
                       ))}
                     </div>
+                    {info && (
+                      <p style={{ color: 'var(--acc)', fontSize: 13, marginBottom: 12 }}>{info}</p>
+                    )}
                     {error && (
                       <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{error}</p>
                     )}
@@ -363,6 +377,9 @@ export default function CheckoutPage() {
                       Split your total into 3 equal monthly payments — no hidden fees, no interest. Available to eligible cardholders.
                     </div>
                     <KokoInstallments total={total} />
+                    {info && (
+                      <p style={{ color: 'var(--acc)', fontSize: 13, marginBottom: 12 }}>{info}</p>
+                    )}
                     {error && (
                       <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{error}</p>
                     )}
@@ -404,6 +421,12 @@ export default function CheckoutPage() {
               </div>
             ))}
             <div className="flex jb text-dim" style={{ fontSize: 13 }}><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+            {discountEligible && (
+              <div className="flex jb" style={{ fontSize: 13, color: 'var(--acc)' }}>
+                <span className="flex ac gap6"><Icons.sparkle style={{ width: 13, height: 13 }} /> Signup discount (10%)</span>
+                <span>−{fmt(discount)}</span>
+              </div>
+            )}
             <div className="flex jb text-dim" style={{ fontSize: 13 }}><span>Shipping</span><span>{fmt(shipping)}</span></div>
             <div className="flex jb" style={{ fontSize: 18, fontFamily: 'var(--f-disp)', fontWeight: 700, paddingTop: 8, borderTop: '1px solid var(--line)' }}>
               <span>Total</span><span style={{ color: 'var(--acc)' }}>{fmt(total)}</span>

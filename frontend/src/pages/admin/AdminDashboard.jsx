@@ -14,7 +14,7 @@ import { CATEGORIES } from '../../data/data';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const fmt   = (n) => `$${Number(n).toFixed(2)}`;
+const fmt   = (n) => `Rs. ${Number(n || 0).toLocaleString('en-LK')}`;
 
 function StatusBadge({ status }) {
   const colors = { pending:'#f59e0b', processing:'#3b82f6', shipped:'#8b5cf6', delivered:'#22c55e', cancelled:'#ef4444', answered:'#22c55e' };
@@ -343,10 +343,10 @@ function ProductsPanel() {
           {/* ── Pricing & stock ── */}
           <SectionHead>Pricing & Stock</SectionHead>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px,1fr))', gap:14, marginBottom:20 }}>
-            <ModalField label="Price ($) *">
+            <ModalField label="Price (Rs.) *">
               <input className="inp" style={darkInp} type="number" min="0" step="0.01" value={form.price} onChange={e => setForm(f=>({...f,price:e.target.value}))} placeholder="0.00" />
             </ModalField>
-            <ModalField label="Original Price ($)">
+            <ModalField label="Original Price (Rs.)">
               <input className="inp" style={darkInp} type="number" min="0" step="0.01" value={form.old} onChange={e => setForm(f=>({...f,old:e.target.value}))} placeholder="Before discount" />
             </ModalField>
             <ModalField label="Stock Status">

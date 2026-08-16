@@ -48,9 +48,20 @@ export function AuthProvider({ children }) {
     return authChangePassword({ currentPassword, newPassword });
   }, []);
 
+  // Re-fetch the current user — used after checkout consumes the one-time
+  // signup discount, so the UI immediately reflects signupDiscountUsed.
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem(TOKEN_KEY)) return null;
+    try {
+      const { user: u } = await authMe();
+      setUser(u);
+      return u;
+    } catch { return null; }
+  }, []);
+
   // profile is just the user object — kept for backward compat with AccountPage
   return (
-    <AuthContext.Provider value={{ user, profile: user, loading, signUp, signIn, signOut, updateProfile, changePassword }}>
+    <AuthContext.Provider value={{ user, profile: user, loading, signUp, signIn, signOut, updateProfile, changePassword, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

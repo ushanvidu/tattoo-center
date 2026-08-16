@@ -59,5 +59,11 @@ export const PRODUCTS = [
 export const WHATSAPP    = '94760336161';
 export const WA_DISPLAY  = '076 033 6161';
 
+// Temporary: the shop is still finalizing real prices for the catalog, so
+// pricing is hidden from customers site-wide until this is flipped back on.
+// Checkout is the one deliberate exception — it still discloses the real
+// total before payment (see CheckoutPage.jsx), since that's a real charge.
+export const SHOW_PRICES = false;
+
 export const fmt = (n) => 'Rs. ' + Number(n).toLocaleString('en-LK', { minimumFractionDigits: 0 });
 export const waLink = (text) => `https://wa.me/${WHATSAPP}?text=` + encodeURIComponent(text);

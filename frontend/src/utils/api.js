@@ -2,14 +2,26 @@ import axios from 'axios';
 import { PRODUCTS, CATEGORIES } from '../data/data';
 import { searchProducts } from './search';
 
-const http = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
-// Inject the active JWT (user token takes priority over admin token)
+const http = axios.create({ baseURL: BASE });
+
+// Customer/public calls carry the customer token only.
 http.interceptors.request.use(config => {
-  const userToken  = localStorage.getItem('tc_user_token');
+  const userToken = localStorage.getItem('tc_user_token');
+  if (userToken) config.headers['Authorization'] = `Bearer ${userToken}`;
+  return config;
+});
+
+// Admin calls carry the admin token only. Kept as a separate client because
+// the two tokens are signed with the same secret — sending a customer token to
+// an admin route used to succeed, so the shop owner being logged in as both
+// silently decided which privileges applied.
+const adminHttp = axios.create({ baseURL: BASE });
+
+adminHttp.interceptors.request.use(config => {
   const adminToken = localStorage.getItem('tc_admin_token');
-  const token = userToken || adminToken;
-  if (token) config.headers['Authorization'] = `Bearer ${token}`;
+  if (adminToken) config.headers['Authorization'] = `Bearer ${adminToken}`;
   return config;
 });
 
@@ -45,7 +57,7 @@ export async function authChangePassword(payload) {
 export async function uploadFile(file) {
   const form = new FormData();
   form.append('file', file);
-  const { data } = await http.post('/upload', form, {
+  const { data } = await adminHttp.post('/upload', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return data; // { url, filename, type, size }
@@ -83,7 +95,7 @@ export async function fetchCategories() {
 }
 
 export async function adminUpdateCategoryMedia(id, payload) {
-  const { data } = await http.patch(`/categories/${id}`, payload);
+  const { data } = await adminHttp.patch(`/categories/${id}`, payload);
   return data;
 }
 
@@ -97,15 +109,14 @@ export async function createOrder(payload) {
   return data;
 }
 
-export async function getPayhereHash(order_id, amount, currency = 'LKR') {
-  const { data } = await http.post('/payment/payhere-hash', { order_id, amount, currency });
-  return data; // { hash, merchant_id, sandbox }
+// The server prices the order itself; we only say which order to sign for.
+export async function getPayhereHash(orderId, currency = 'LKR') {
+  const { data } = await http.post('/payment/payhere-hash', { orderId, currency });
+  return data; // { hash, merchant_id, sandbox, order_id, amount, currency }
 }
 
 // ─── Q&A (legacy admin key path) ─────────────────────────────────────────────
 
-const QA_KEY = import.meta.env.VITE_ADMIN_KEY || '';
-const qaHeaders = () => ({ 'x-admin-key': QA_KEY });
 
 export async function fetchPublicQuestions() {
   const { data } = await http.get('/questions');
@@ -118,17 +129,17 @@ export async function submitQuestion(payload) {
 }
 
 export async function fetchAllQuestions() {
-  const { data } = await http.get('/questions/admin', { headers: qaHeaders() });
+  const { data } = await adminHttp.get('/questions/admin');
   return data;
 }
 
 export async function answerQuestion(id, answer, isPublic = true) {
-  const { data } = await http.patch(`/questions/${id}/answer`, { answer, public: isPublic }, { headers: qaHeaders() });
+  const { data } = await adminHttp.patch(`/questions/${id}/answer`, { answer, public: isPublic });
   return data;
 }
 
 export async function deleteQuestion(id) {
-  const { data } = await http.delete(`/questions/${id}`, { headers: qaHeaders() });
+  const { data } = await adminHttp.delete(`/questions/${id}`);
   return data;
 }
 
@@ -140,29 +151,29 @@ export async function adminLogin(username, password) {
 }
 
 export async function adminVerify() {
-  const { data } = await http.get('/admin/verify');
+  const { data } = await adminHttp.get('/admin/verify');
   return data; // { valid, username }
 }
 
 // ─── Admin: Products ──────────────────────────────────────────────────────────
 
 export async function adminFetchProducts() {
-  const { data } = await http.get('/products');
+  const { data } = await adminHttp.get('/products', { params: { full: 1 } });
   return data;
 }
 
 export async function adminCreateProduct(payload) {
-  const { data } = await http.post('/products', payload);
+  const { data } = await adminHttp.post('/products', payload);
   return data;
 }
 
 export async function adminUpdateProduct(id, payload) {
-  const { data } = await http.patch(`/products/${id}`, payload);
+  const { data } = await adminHttp.patch(`/products/${id}`, payload);
   return data;
 }
 
 export async function adminDeleteProduct(id) {
-  const { data } = await http.delete(`/products/${id}`);
+  const { data } = await adminHttp.delete(`/products/${id}`);
   return data;
 }
 
@@ -178,41 +189,41 @@ export async function fetchAnnouncements() {
 }
 
 export async function adminFetchAnnouncements() {
-  const { data } = await http.get('/announcements/all');
+  const { data } = await adminHttp.get('/announcements/all');
   return data;
 }
 
 export async function adminCreateAnnouncement(payload) {
-  const { data } = await http.post('/announcements', payload);
+  const { data } = await adminHttp.post('/announcements', payload);
   return data;
 }
 
 export async function adminUpdateAnnouncement(id, payload) {
-  const { data } = await http.patch(`/announcements/${id}`, payload);
+  const { data } = await adminHttp.patch(`/announcements/${id}`, payload);
   return data;
 }
 
 export async function adminDeleteAnnouncement(id) {
-  const { data } = await http.delete(`/announcements/${id}`);
+  const { data } = await adminHttp.delete(`/announcements/${id}`);
   return data;
 }
 
 // ─── Admin: Orders ────────────────────────────────────────────────────────────
 
 export async function adminFetchOrders() {
-  const { data } = await http.get('/orders');
+  const { data } = await adminHttp.get('/orders');
   return data;
 }
 
 export async function adminUpdateOrderStatus(id, status) {
-  const { data } = await http.patch(`/orders/${id}`, { status });
+  const { data } = await adminHttp.patch(`/orders/${id}`, { status });
   return data;
 }
 
 // ─── Admin: Bookings ──────────────────────────────────────────────────────────
 
 export async function adminFetchBookings() {
-  const { data } = await http.get('/bookings');
+  const { data } = await adminHttp.get('/bookings');
   return data;
 }
 

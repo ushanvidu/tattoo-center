@@ -300,14 +300,6 @@ input, textarea, select { font-family: inherit; color: inherit; }
   display: grid; place-items: center; overflow: hidden;
 }
 .media-ph svg { width: clamp(28px, 34%, 60px); height: auto; color: rgba(255,255,255,.38); }
-.hero-fallback {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  background: radial-gradient(120% 100% at 30% 10%, #10262a, #0a0a0d 75%);
-}
-.hero-fallback img {
-  width: 104px; height: 104px; border-radius: 22px;
-  border: 1px solid var(--line-2); object-fit: cover; opacity: .92;
-}
 
 /* ============================================================
    PRODUCT CARD
@@ -453,19 +445,48 @@ textarea.inp { resize: vertical; min-height: 92px; }
   animation: heroScan 7s linear infinite;
 }
 @keyframes heroScan { 0% { top: -160px; } 100% { top: 100%; } }
-.hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; width: 100%; }
+.hero-grid { position: relative; z-index: 2; display: grid; grid-template-columns: 1.08fr 1fr; gap: 44px; align-items: center; width: 100%; }
 @media (max-width: 980px) { .hero-grid { grid-template-columns: 1fr; gap: 30px; } }
 .live-tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--text); }
 .live-tag i { width: 9px; height: 9px; border-radius: 50%; background: #ff4d4d; animation: blink 1.4s ease infinite; }
 @keyframes blink { 50% { opacity: .25; } }
 .hero-stack { display: grid; gap: 14px; }
-.hero-vid { aspect-ratio: 4/5; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line-2); position: relative; }
-.hero-showcase { position: absolute; inset: 0; }
-.hero-showcase-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.1s ease; }
-.hero-showcase-img.on { opacity: 1; }
-.hero-vid-fade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(6,6,8,.15) 0%, rgba(6,6,8,.1) 45%, rgba(6,6,8,.75) 100%); }
-.printhead { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--acc), transparent); box-shadow: 0 0 14px var(--acc); animation: print 3.4s ease-in-out infinite; z-index: 3; }
-@keyframes print { 0%,100% { top: 18%; } 50% { top: 74%; } }
+
+/* ── Hero product reel ── */
+.hero-film {
+  position: relative; aspect-ratio: 16/9; border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--line-2); background: #06060a;
+  box-shadow: 0 30px 70px rgba(0,0,0,.55);
+}
+.hero-film-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Keeps the reel sitting in the page rather than looking like a pasted rectangle. */
+.hero-film-edge {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(180deg, rgba(6,6,10,.30) 0%, transparent 30%, transparent 62%, rgba(6,6,10,.72) 100%);
+  box-shadow: inset 0 0 90px rgba(0,0,0,.55);
+}
+.hero-film-play {
+  position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  background: rgba(6,6,10,.34); border: 0; cursor: pointer; color: var(--text);
+  transition: background .22s;
+}
+.hero-film-play:hover { background: rgba(6,6,10,.16); }
+.hero-film-play-ring {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(8,8,10,.6); border: 1px solid var(--line-2); backdrop-filter: blur(6px); transition: .22s;
+}
+.hero-film-play-ring svg { width: 24px; height: 24px; margin-left: 3px; }
+.hero-film-play:hover .hero-film-play-ring { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); transform: scale(1.06); }
+.hero-film-play-label {
+  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+}
+.hero-film-tag {
+  position: absolute; left: 14px; bottom: 13px; z-index: 2;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--faint); border: 1px solid var(--line); padding: 4px 9px; border-radius: 6px;
+  background: rgba(8,8,10,.6); backdrop-filter: blur(4px);
+}
 
 /* trust strip */
 .trust-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); }

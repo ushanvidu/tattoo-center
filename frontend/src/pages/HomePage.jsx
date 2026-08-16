@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES, FEATURED_CATS, TONE, waLink, fmt } from '../data/data';
@@ -9,36 +9,55 @@ import ProductCard from '../components/shared/ProductCard';
 import Icons from '../components/shared/Icons';
 import { StencilSection } from './StencilPage';
 
-/* ── Hero showcase: cycles through real product photos instead of a static placeholder ── */
-function HeroShowcase({ products }) {
-  const shots = products.filter(p => p.thumbnail).slice(0, 6);
-  const [i, setI] = useState(0);
+/* ── Hero film: the studio's own silent product reel ── */
+function HeroFilm() {
+  const ref = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
+  const start = () => {
+    const v = ref.current; if (!v) return;
+    v.play().then(() => setPlaying(true)).catch(() => {});
+  };
 
   useEffect(() => {
-    if (shots.length < 2) return;
-    const t = setInterval(() => setI(v => (v + 1) % shots.length), 2800);
-    return () => clearInterval(t);
-  }, [shots.length]);
-
-  if (!shots.length) {
-    return (
-      <div className="hero-fallback">
-        <img src="/logo.jpeg" alt="Tattoo Center" />
-      </div>
-    );
-  }
+    // The reel is silent, so looping it muted loses nothing — but it's a 20MB
+    // file, so only autoplay on larger screens and never on a metered
+    // connection. Phones keep the poster until the visitor taps play.
+    if (typeof window === 'undefined') return;
+    const wide = window.matchMedia('(min-width: 768px)').matches;
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (!wide || saveData) return;
+    const v = ref.current; if (!v) return;
+    v.play().then(() => setPlaying(true)).catch(() => {});
+  }, []);
 
   return (
-    <div className="hero-showcase">
-      {shots.map((p, idx) => (
-        <img key={p._id || p.id} src={p.thumbnail} alt={p.name} className={`hero-showcase-img ${idx === i ? 'on' : ''}`} />
-      ))}
+    <div className="hero-film">
+      <video
+        ref={ref}
+        className="hero-film-video"
+        poster="/hero-poster.jpg"
+        src="/our-mission.mp4"
+        muted
+        loop
+        playsInline
+        preload="none"
+        aria-label="Tattoo Center product reel"
+      />
+      <div className="hero-film-edge" />
+      {!playing && (
+        <button className="hero-film-play" onClick={start} type="button">
+          <span className="hero-film-play-ring"><Icons.play /></span>
+          <span className="hero-film-play-label">Watch the reel</span>
+        </button>
+      )}
+      <span className="hero-film-tag">Our mission · 1:32</span>
     </div>
   );
 }
 
 /* ── Hero ── */
-function Hero({ products }) {
+function Hero() {
   const s = useStore();
   return (
     <section className="hero grain">
@@ -48,20 +67,20 @@ function Hero({ products }) {
         <div>
           <Reveal>
             <div className="flex ac gap16 wrap-flex" style={{ marginBottom: 22 }}>
-              <span className="live-tag"><i />Live demos available</span>
-              <span className="chip chip-acc chip-dot">Tested by pro artists</span>
+              <span className="live-tag"><i />Island-wide delivery</span>
+              <span className="chip chip-acc chip-dot">Genuine brands only</span>
             </div>
-            <h1 className="h-mega">Print Perfect<br />Stencils in<br /><span className="text-acc">Seconds.</span></h1>
+            <h1 className="h-mega">Everything<br />Your Studio<br /><span className="text-acc">Needs.</span></h1>
             <p className="lede" style={{ marginTop: 22 }}>
-              Premium tattoo equipment for modern artists — stencil printers, machines, needles, inks and transfer supplies, tested in our lab before they reach your studio.
+              Sri Lanka's tattoo supply partner — machines, cartridges, inks, stencil
+              supplies, numbing and aftercare from the brands professionals trust.
             </p>
             <div className="flex gap12 wrap-flex" style={{ marginTop: 30 }}>
               <Link to="/shop" className="btn btn-acc btn-lg"><Icons.grid /> Shop Equipment</Link>
-              <Link to="/stencil" className="btn btn-ghost btn-lg"><Icons.layers /> Try Stencil Preview</Link>
               <button className="btn btn-solid btn-lg" onClick={() => s.openBooking()}><Icons.cal /> Book Live Demo</button>
             </div>
             <div className="flex gap24 wrap-flex" style={{ marginTop: 34 }}>
-              {[['8s','Stencil print time'],['2,400+','Artists supplied'],['4.9★','Avg. rating']].map(([n,l]) => (
+              {[['2,400+','Artists supplied'],['50+','Brands stocked'],['4.9★','Avg. rating']].map(([n,l]) => (
                 <div key={l}>
                   <div className="display" style={{ fontSize: 30 }}>{n}</div>
                   <div className="text-dim mono" style={{ fontSize: 11, letterSpacing: '.12em' }}>{l.toUpperCase()}</div>
@@ -71,12 +90,7 @@ function Hero({ products }) {
           </Reveal>
         </div>
         <Reveal delay={120} className="hero-stack">
-          <div className="hero-vid ph">
-            <HeroShowcase products={products} />
-            <div className="hero-vid-fade" />
-            <div className="printhead" />
-            <span className="ph-label">PRINTER › STENCIL › SKIN</span>
-          </div>
+          <HeroFilm />
         </Reveal>
       </div>
     </section>
@@ -85,7 +99,7 @@ function Hero({ products }) {
 
 /* ── Trust Strip ── */
 function TrustStrip() {
-  const items = [['bolt','8-second prints'],['shield','Lab-tested gear'],['truck','Island-wide delivery'],['wa','WhatsApp ordering']];
+  const items = [['shield','Genuine brands'],['bolt','Artist tested'],['truck','Island-wide delivery'],['wa','WhatsApp ordering']];
   return (
     <div style={{ borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', background: 'var(--bg-1)' }}>
       <div className="wrap trust-strip">
@@ -368,13 +382,13 @@ export default function HomePage() {
 
   return (
     <>
-      <Hero products={products} />
+      <Hero />
       <TrustStrip />
       <CategoryGrid products={products} categories={categories} />
-      <Workflow />
       <BestSellers products={products} />
-      <TestingLab />
       <StencilSection compact />
+      <Workflow />
+      <TestingLab />
       <LiveDemoCall />
       <PromoStrip />
       <Testimonials />

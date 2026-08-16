@@ -1,5 +1,6 @@
 const express = require('express');
 const Question = require('../models/Question');
+const adminAuth = require('../middleware/adminAuth');
 const router = express.Router();
 
 // Public: list answered public questions
@@ -29,10 +30,7 @@ router.post('/', async (req, res) => {
 });
 
 // Admin: list all questions (pending + answered)
-router.get('/admin', async (req, res) => {
-  if (req.headers['x-admin-key'] !== process.env.ADMIN_KEY) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+router.get('/admin', adminAuth, async (req, res) => {
   try {
     const questions = await Question.find().sort({ createdAt: -1 });
     res.json(questions);
@@ -42,10 +40,7 @@ router.get('/admin', async (req, res) => {
 });
 
 // Admin: answer a question
-router.patch('/:id/answer', async (req, res) => {
-  if (req.headers['x-admin-key'] !== process.env.ADMIN_KEY) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+router.patch('/:id/answer', adminAuth, async (req, res) => {
   try {
     const q = await Question.findByIdAndUpdate(
       req.params.id,
@@ -65,10 +60,7 @@ router.patch('/:id/answer', async (req, res) => {
 });
 
 // Admin: delete a question
-router.delete('/:id', async (req, res) => {
-  if (req.headers['x-admin-key'] !== process.env.ADMIN_KEY) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     await Question.findByIdAndDelete(req.params.id);
     res.json({ message: 'Deleted' });

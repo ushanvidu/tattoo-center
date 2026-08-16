@@ -44,18 +44,27 @@ export default function AboutPage() {
         </Reveal>
       </div>
 
-      {/* mission */}
+      {/* mission & vision */}
       <div className="wrap section" style={{ paddingTop: 0 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}>
           <Reveal>
-            <span className="eyebrow no-line" style={{ marginBottom: 14 }}>Our Mission</span>
-            <h2 className="h2" style={{ marginBottom: 20 }}>Professional Equipment Should Be Accessible to Every Artist</h2>
-            <p className="lede" style={{ marginBottom: 20 }}>
-              We believe every tattooist — from apprentice to world-class professional — deserves access to the same quality equipment used in top studios globally.
-            </p>
-            <p className="text-dim" style={{ lineHeight: 1.7, marginBottom: 28 }}>
-              Tattoo Center was founded in 2018 to bridge the gap between international premium brands and local artists in Sri Lanka. Today we serve artists across the country and ship internationally.
-            </p>
+            <span className="eyebrow no-line" style={{ marginBottom: 14 }}>Mission &amp; Vision</span>
+            <h2 className="h2" style={{ marginBottom: 24 }}>Why We Do This</h2>
+
+            <div style={{ marginBottom: 26 }}>
+              <h3 className="h3" style={{ fontSize: 13, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--acc)', marginBottom: 8 }}>Mission</h3>
+              <p className="lede" style={{ fontSize: 17 }}>
+                To provide high-quality tattoo equipment and supplies that empower artists with reliable, innovative, and professional solutions.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: 28 }}>
+              <h3 className="h3" style={{ fontSize: 13, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--acc)', marginBottom: 8 }}>Vision</h3>
+              <p className="text-dim" style={{ lineHeight: 1.7 }}>
+                To become Sri Lanka's most trusted tattoo industry partner, recognized for quality, excellence, and global standards.
+              </p>
+            </div>
+
             <Link to="/shop" className="btn btn-acc">Explore Our Range</Link>
           </Reveal>
           <Reveal>

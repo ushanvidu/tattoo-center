@@ -18,6 +18,7 @@ export function StoreProvider({ children }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [preview,  setPreview]  = useState(null);
   const [booking,  setBooking]  = useState({ open: false, product: null });
+  const [signupPopup, setSignupPopup] = useState(false);
   const [toasts,   setToasts]   = useState([]);
 
   useEffect(() => { localStorage.setItem('tc_cart', JSON.stringify(cart)); }, [cart]);
@@ -62,6 +63,7 @@ export function StoreProvider({ children }) {
       cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false),
       preview, openPreview: (p) => setPreview(p), closePreview: () => setPreview(null),
       booking, openBooking: (p = null) => setBooking({ open: true, product: p }), closeBooking: () => setBooking({ open: false, product: null }),
+      signupPopup, openSignupPopup: () => setSignupPopup(true), closeSignupPopup: () => setSignupPopup(false),
       toasts, toast,
     }}>
       {children}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
-import { fmt, waLink } from '../../data/data';
+import { fmt, waLink, SHOW_PRICES } from '../../data/data';
 import { TONE, CATEGORIES } from '../../data/data';
 import Icons from './Icons';
 import Stars from './Stars';
@@ -65,15 +65,19 @@ export default function ProductCard({ product, onPreview }) {
           {product.name}
         </Link>
         <div className="pcard-hl">{product.highlight}</div>
-        <div className="pcard-foot">
-          <div className="price">
-            {fmt(product.price)}
-            {product.old && <s>{fmt(product.old)}</s>}
-          </div>
+        <div className="pcard-foot" style={SHOW_PRICES ? undefined : { justifyContent: 'flex-end' }}>
+          {SHOW_PRICES && (
+            <div className="price">
+              {fmt(product.price)}
+              {product.old && <s>{fmt(product.old)}</s>}
+            </div>
+          )}
           <div className="pcard-btns">
             <a
               className="mini-btn wa"
-              href={waLink(`Hi Tattoo Center, I'd like to order: ${product.name} (${fmt(product.price)}).`)}
+              href={waLink(SHOW_PRICES
+                ? `Hi Tattoo Center, I'd like to order: ${product.name} (${fmt(product.price)}).`
+                : `Hi Tattoo Center, I'd like to order: ${product.name}. Please share the price.`)}
               target="_blank" rel="noreferrer"
               onClick={e => e.stopPropagation()}
               aria-label="Order on WhatsApp"

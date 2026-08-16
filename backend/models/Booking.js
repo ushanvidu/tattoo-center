@@ -7,7 +7,11 @@ const bookingSchema = new mongoose.Schema({
   date:    String,
   time:    String,
   product: String,
-  status:  { type: String, default: 'pending' },
+  note:    String,
+  // Set server-side from the auth token when the booker is signed in, so
+  // bookings can be tied back to an account.
+  user_id: String,
+  status:  { type: String, default: 'pending', enum: ['pending', 'confirmed', 'done', 'cancelled'] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

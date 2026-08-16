@@ -60,6 +60,30 @@ function shade(hex, amt) {
 
 const SKIN = { arm: '#c89a7e', forearm: '#cda386', back: '#bb8c70', leg: '#c69779' };
 
+// Cut-out reference photos (transparent background, cropped tight to the limb).
+// Any body part without a photo falls back to the illustrated shape below.
+const BODY_IMG_SRC = {
+  arm:     '/stencil-body/arm.png',
+  forearm: '/stencil-body/forearm.png',
+  back:    '/stencil-body/back.png',
+  leg:     '/stencil-body/leg.png',
+};
+
+// Where the design sits on each body part, and how wide it is at 100% size.
+// Both are normalised against the drawn limb, so placement holds at any
+// preview size. `span` is the design's width as a fraction of the limb's width.
+const BODY_PLACEMENT = {
+  arm:     { anchor: [0.62, 0.58], span: 0.30 },
+  forearm: { anchor: [0.60, 0.50], span: 0.28 },
+  back:    { anchor: [0.50, 0.66], span: 0.46 },
+  leg:     { anchor: [0.30, 0.24], span: 0.40 },
+};
+
+// The placement stage is a fixed 4:3 canvas so the limb always renders at a
+// sensible size — previously it inherited the uploaded design's dimensions,
+// which left the body tiny and the design covering the entire frame.
+const STAGE_W = 900, STAGE_H = 675;
+
 function SampleThumb({ type }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -73,16 +97,29 @@ function SampleThumb({ type }) {
 
 export function StencilTool({ compact = false }) {
   const store = useStore();
-  const [params, setParams] = useState({ darkness: 62, thickness: 2, mirror: false });
+  const [params, setParams] = useState({ darkness: 62, thickness: 2, mirror: false, size: 100 });
   const [place,  setPlace]  = useState('forearm');
   const [over,   setOver]   = useState(false);
   const [active, setActive] = useState('rose');
-  const [hasImg, setHasImg] = useState(false);
-  const work    = useRef(null);
-  const origRef = useRef(null);
-  const stenRef = useRef(null);
-  const bodyRef = useRef(null);
-  const fileRef = useRef(null);
+  const [imgVersion, setImgVersion] = useState(0);
+  const work     = useRef(null);
+  const origRef  = useRef(null);
+  const stenRef  = useRef(null);
+  const bodyRef  = useRef(null);
+  const fileRef  = useRef(null);
+  const bodyImgs = useRef({});
+  const [bodyPhotosReady, setBodyPhotosReady] = useState(0);
+
+  // Try loading real body-part photos once; each one that succeeds triggers a
+  // re-render so the preview upgrades from the illustrated fallback automatically.
+  useEffect(() => {
+    Object.entries(BODY_IMG_SRC).forEach(([key, src]) => {
+      const img = new Image();
+      img.onload  = () => { bodyImgs.current[key] = img; setBodyPhotosReady(v => v + 1); };
+      img.onerror = () => {}; // no photo supplied yet for this body part — fallback stays in use
+      img.src = src;
+    });
+  }, []);
 
   const ingest = useCallback((srcCanvasOrImg) => {
     const MAX = 560;
@@ -93,8 +130,19 @@ export function StencilTool({ compact = false }) {
     const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
     const tx = tmp.getContext('2d'); tx.drawImage(srcCanvasOrImg, 0, 0, w, h);
     const img = tx.getImageData(0, 0, w, h).data;
+    const gray0 = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) gray0[i] = 0.299 * img[i*4] + 0.587 * img[i*4+1] + 0.114 * img[i*4+2];
+    // Light 3x3 box blur before edge detection — smooths JPEG/photo noise so the
+    // stencil comes out as clean lines instead of a speckled mess.
     const gray = new Float32Array(w * h);
-    for (let i = 0; i < w * h; i++) gray[i] = 0.299 * img[i*4] + 0.587 * img[i*4+1] + 0.114 * img[i*4+2];
+    for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) {
+      let sum = 0, n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const ny = y + dy, nx = xx + dx;
+        if (ny >= 0 && ny < h && nx >= 0 && nx < w) { sum += gray0[ny*w+nx]; n++; }
+      }
+      gray[y*w+xx] = sum / n;
+    }
     const mag = new Float32Array(w * h); let max = 1;
     for (let y = 1; y < h - 1; y++) for (let xx = 1; xx < w - 1; xx++) {
       const o = y * w + xx;
@@ -104,7 +152,7 @@ export function StencilTool({ compact = false }) {
     }
     for (let i = 0; i < mag.length; i++) mag[i] = mag[i] / max * 255;
     work.current = { w, h, mag, orig: tmp };
-    setHasImg(true);
+    setImgVersion(v => v + 1);
   }, []);
 
   useEffect(() => { ingest(drawSample('rose')); }, [ingest]);
@@ -137,18 +185,72 @@ export function StencilTool({ compact = false }) {
       sx.save(); if (params.mirror) { sx.translate(w,0); sx.scale(-1,1); } drawThick(sx); sx.restore();
     }
     const bc = bodyRef.current; if (bc) {
-      const bw=w, bh=Math.round(h*1.05); bc.width=bw; bc.height=bh; const bx=bc.getContext('2d');
-      const sk = SKIN[place] || '#c89a7e';
-      const g = bx.createLinearGradient(0,0,bw,bh); g.addColorStop(0,sk); g.addColorStop(1,shade(sk,-22));
-      bx.fillStyle=g; bx.fillRect(0,0,bw,bh);
-      bx.fillStyle='rgba(0,0,0,.10)'; bx.fillRect(0,0,bw*0.14,bh); bx.fillRect(bw*0.86,0,bw*0.14,bh);
-      bx.fillStyle='rgba(255,255,255,.06)'; bx.fillRect(bw*0.4,0,bw*0.2,bh);
-      bx.save(); bx.globalAlpha=0.82; bx.translate((bw-w)/2,(bh-h)/2);
-      if (params.mirror) { bx.translate(w,0); bx.scale(-1,1); } drawThick(bx); bx.restore();
-    }
-  }, [buildLines, params.thickness, params.mirror, place]);
+      bc.width = STAGE_W; bc.height = STAGE_H;
+      const bx = bc.getContext('2d');
+      bx.clearRect(0, 0, STAGE_W, STAGE_H);
+      const photo = bodyImgs.current[place];
+      const cfg = BODY_PLACEMENT[place] || { anchor: [0.5, 0.5], span: 0.32 };
 
-  useEffect(() => { if (hasImg) renderAll(); }, [hasImg, params, place, renderAll]);
+      // Where the limb (real photo or illustrated stand-in) lands on the stage.
+      let px, py, pw, ph;
+      if (photo) {
+        const fit = Math.min(STAGE_W / photo.width, STAGE_H / photo.height) * 0.94;
+        pw = photo.width * fit; ph = photo.height * fit;
+      } else {
+        const vertical = place !== 'back';
+        ph = STAGE_H * 0.94;
+        pw = vertical ? ph * 0.34 : ph * 0.92;
+      }
+      px = (STAGE_W - pw) / 2; py = (STAGE_H - ph) / 2;
+
+      if (photo) {
+        bx.drawImage(photo, px, py, pw, ph);
+      } else {
+        const sk = SKIN[place] || '#c89a7e';
+        bx.save(); bx.beginPath();
+        bx.roundRect(px, py, pw, ph, place === 'back' ? 26 : pw * 0.5);
+        bx.clip();
+        const g = bx.createLinearGradient(px, 0, px + pw, 0);
+        g.addColorStop(0, shade(sk, -24)); g.addColorStop(.42, shade(sk, 12)); g.addColorStop(1, shade(sk, -30));
+        bx.fillStyle = g; bx.fillRect(px, py, pw, ph);
+        bx.restore();
+      }
+
+      // Size the design against the limb rather than the canvas, so it reads
+      // like a real tattoo instead of covering the whole frame.
+      const tw = pw * cfg.span * (params.size / 100);
+      const th = tw * (h / w);
+      const tx = px + pw * cfg.anchor[0] - tw / 2;
+      const ty = py + ph * cfg.anchor[1] - th / 2;
+
+      if (lines) {
+        // Build the ink on its own layer so it can be masked to the skin —
+        // otherwise a large design floats off the edge of the arm.
+        const layer = document.createElement('canvas');
+        layer.width = STAGE_W; layer.height = STAGE_H;
+        const lx = layer.getContext('2d');
+        lx.save();
+        if (params.mirror) { lx.translate(tx + tw / 2, 0); lx.scale(-1, 1); lx.translate(-(tx + tw / 2), 0); }
+        offsets.forEach(([dx, dy]) => lx.drawImage(lines, tx + dx, ty + dy, tw, th));
+        lx.restore();
+        lx.globalCompositeOperation = 'destination-in';
+        if (photo) {
+          lx.drawImage(photo, px, py, pw, ph);
+        } else {
+          lx.beginPath();
+          lx.roundRect(px, py, pw, ph, place === 'back' ? 26 : pw * 0.5);
+          lx.fill();
+        }
+        bx.save();
+        bx.globalAlpha = 0.9;
+        bx.globalCompositeOperation = 'multiply';
+        bx.drawImage(layer, 0, 0);
+        bx.restore();
+      }
+    }
+  }, [buildLines, params.thickness, params.mirror, params.size, place, bodyPhotosReady]);
+
+  useEffect(() => { if (imgVersion > 0) renderAll(); }, [imgVersion, params, place, renderAll]);
 
   const onFile = (file) => {
     if (!file) return;
@@ -192,6 +294,10 @@ export function StencilTool({ compact = false }) {
         <div className="ctrl">
           <label>Line thickness <b>{params.thickness}px</b></label>
           <input type="range" min="1" max="4" value={params.thickness} onChange={e => set('thickness', +e.target.value)} />
+        </div>
+        <div className="ctrl">
+          <label>Tattoo size on body <b>{params.size}%</b></label>
+          <input type="range" min="40" max="200" step="5" value={params.size} onChange={e => set('size', +e.target.value)} />
         </div>
         <div className="toggle">
           <div className="flex ac gap12">

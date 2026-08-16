@@ -1,6 +1,6 @@
 import { useStore } from '../../context/StoreContext';
 import { useNavigate } from 'react-router-dom';
-import { fmt, WHATSAPP } from '../../data/data';
+import { fmt, WHATSAPP, SHOW_PRICES } from '../../data/data';
 import { ProductMedia } from '../shared/ProductCard';
 import Icons from '../shared/Icons';
 
@@ -10,8 +10,8 @@ export default function CartDrawer() {
 
   const waText = () =>
     'Hi Tattoo Center, I would like to order:%0A' +
-    s.cart.map(i => `• ${i.name} ×${i.qty} — ${fmt(i.price * i.qty)}`).join('%0A') +
-    `%0A%0ATotal: ${fmt(s.cartTotal)}`;
+    s.cart.map(i => SHOW_PRICES ? `• ${i.name} ×${i.qty} — ${fmt(i.price * i.qty)}` : `• ${i.name} ×${i.qty}`).join('%0A') +
+    (SHOW_PRICES ? `%0A%0ATotal: ${fmt(s.cartTotal)}` : '%0A%0APlease share the total price.');
 
   return (
     <>
@@ -50,7 +50,7 @@ export default function CartDrawer() {
                     <span>{i.qty}</span>
                     <button onClick={() => s.setQty(i.id || i._id, i.qty + 1)}><Icons.plus /></button>
                   </div>
-                  <span className="price" style={{ fontSize: 18 }}>{fmt(i.price * i.qty)}</span>
+                  {SHOW_PRICES && <span className="price" style={{ fontSize: 18 }}>{fmt(i.price * i.qty)}</span>}
                 </div>
               </div>
             </div>
@@ -59,16 +59,18 @@ export default function CartDrawer() {
 
         {s.cart.length > 0 && (
           <div className="drawer-foot">
-            <div className="flex jb ac" style={{ marginBottom: 6 }}>
-              <span className="text-dim mono" style={{ fontSize: 12 }}>SUBTOTAL</span>
-              <span className="price">{fmt(s.cartTotal)}</span>
-            </div>
+            {SHOW_PRICES && (
+              <div className="flex jb ac" style={{ marginBottom: 6 }}>
+                <span className="text-dim mono" style={{ fontSize: 12 }}>SUBTOTAL</span>
+                <span className="price">{fmt(s.cartTotal)}</span>
+              </div>
+            )}
             <p className="text-dim" style={{ fontSize: 11.5, marginBottom: 14 }}>
               Shipping calculated at checkout · Pay via PayHere or Koko BNPL
             </p>
             <button className="btn btn-acc btn-block" style={{ marginBottom: 9 }}
               onClick={() => { s.closeCart(); navigate('/checkout'); }}>
-              Checkout · {fmt(s.cartTotal)}
+              {SHOW_PRICES ? `Checkout · ${fmt(s.cartTotal)}` : 'Checkout'}
             </button>
             <a className="btn btn-wa btn-block" href={`https://wa.me/${WHATSAPP}?text=${waText()}`} target="_blank" rel="noreferrer">
               <Icons.wa /> Order all via WhatsApp

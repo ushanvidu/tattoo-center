@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS, CATEGORIES, TONE, fmt, waLink } from '../data/data';
+import { PRODUCTS, CATEGORIES, TONE, fmt, waLink, SHOW_PRICES } from '../data/data';
 import { fetchProducts, fetchProduct } from '../utils/api';
 import ProductCard from '../components/shared/ProductCard';
 import Stars from '../components/shared/Stars';
@@ -42,7 +42,9 @@ export default function ProductPage() {
 
   const images = product.images && product.images.length ? product.images : [];
 
-  const waMsg = `Hi Tattoo Center, I would like to order:\n• ${product.name} — ${fmt(product.price)}\nPlease confirm availability.`;
+  const waMsg = SHOW_PRICES
+    ? `Hi Tattoo Center, I would like to order:\n• ${product.name} — ${fmt(product.price)}\nPlease confirm availability.`
+    : `Hi Tattoo Center, I would like to order:\n• ${product.name}\nPlease share the price and confirm availability.`;
 
   return (
     <div style={{ paddingTop: 'var(--nav-h)', background: 'var(--bg)' }}>
@@ -100,10 +102,12 @@ export default function ProductPage() {
                 <Stars value={product.rating} />
                 <span className="text-dim mono" style={{ fontSize: 11.5 }}>{product.rating} · {product.reviews} reviews</span>
               </div>
-              <div className="flex ac gap12">
-                <span className="price" style={{ fontSize: 34 }}>{fmt(product.price)}</span>
-                {product.old && <span style={{ fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--faint)', textDecoration: 'line-through' }}>{fmt(product.old)}</span>}
-              </div>
+              {SHOW_PRICES && (
+                <div className="flex ac gap12">
+                  <span className="price" style={{ fontSize: 34 }}>{fmt(product.price)}</span>
+                  {product.old && <span style={{ fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--faint)', textDecoration: 'line-through' }}>{fmt(product.old)}</span>}
+                </div>
+              )}
             </div>
 
             <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r)', padding: '14px 16px', fontSize: 14, color: 'var(--dim)' }}>
@@ -170,7 +174,7 @@ export default function ProductPage() {
           <Reveal>
             <h2 className="h2" style={{ marginBottom: 24 }}>Related Products</h2>
             <div className="pgrid">
-              {related.map(p => <ProductCard key={p.id || p._id} product={p} />)}
+              {related.map(p => <ProductCard key={p.id || p._id} product={p} onPreview={s.openPreview} />)}
             </div>
           </Reveal>
         </div>

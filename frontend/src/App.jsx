@@ -6,6 +6,7 @@ import AnnouncementBar from './components/layout/AnnouncementBar';
 import CartDrawer   from './components/overlays/CartDrawer';
 import QuickPreview from './components/overlays/QuickPreview';
 import BookingModal from './components/overlays/BookingModal';
+import SignupPopupModal from './components/overlays/SignupPopupModal';
 import WhatsAppFAB  from './components/overlays/WhatsAppFAB';
 import Toasts       from './components/overlays/Toasts';
 
@@ -59,6 +60,7 @@ function PublicLayout() {
       <CartDrawer />
       <QuickPreview />
       <BookingModal />
+      <SignupPopupModal />
       <WhatsAppFAB />
       <Toasts />
     </>

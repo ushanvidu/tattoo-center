@@ -9,6 +9,7 @@ export default function BookingModal() {
   const open = s.booking.open;
   const [mode,   setMode]   = useState('whatsapp');
   const [done,   setDone]   = useState(false);
+  const [err,    setErr]    = useState('');
   const [date,   setDate]   = useState('');
   const [time,   setTime]   = useState('');
   const [name,   setName]   = useState('');
@@ -18,7 +19,7 @@ export default function BookingModal() {
   useEffect(() => { if (open) setDone(false); }, [open]);
 
   const days = [];
-  const base = new Date(2026, 5, 8);
+  const base = new Date(); // was hardcoded to a fixed date, so it offered days in the past
   for (let i = 0; i < 8; i++) {
     const d = new Date(base);
     d.setDate(base.getDate() + i * 2);
@@ -27,10 +28,18 @@ export default function BookingModal() {
   const times = ['10:00','11:30','14:00','15:30','17:00'];
 
   const submit = async () => {
+    if (!name.trim() || !phone.trim() || !date || !time) {
+      setErr('Please fill in your name, phone, date and time.');
+      return;
+    }
+    setErr('');
     try {
       await createBooking({ name, phone, mode, date, time, product });
-    } catch { /* backend may be offline */ }
-    setDone(true);
+      setDone(true);
+    } catch {
+      // Previously this reported success even when the booking was never saved.
+      setErr('Could not save your booking. Please try again or message us on WhatsApp.');
+    }
   };
 
   return (
@@ -102,6 +111,7 @@ export default function BookingModal() {
                   ))}
                 </select>
               </div>
+              {err && <p style={{ color: 'var(--danger)', fontSize: 13, margin: '0 0 10px' }}>{err}</p>}
               <button className="btn btn-acc btn-block btn-lg" onClick={submit}>
                 <Icons.cal /> Request {mode === 'whatsapp' ? 'Video' : 'Studio'} Demo
               </button>

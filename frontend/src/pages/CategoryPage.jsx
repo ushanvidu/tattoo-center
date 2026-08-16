@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CATEGORIES, PRODUCTS } from '../data/data';
+import { useStore } from '../context/StoreContext';
+import { CATEGORIES, PRODUCTS, SHOW_PRICES } from '../data/data';
 import { fetchProducts } from '../utils/api';
 import ProductCard from '../components/shared/ProductCard';
 import Reveal from '../components/shared/Reveal';
@@ -8,6 +9,7 @@ import Icons from '../components/shared/Icons';
 
 export default function CategoryPage() {
   const { cat }    = useParams();
+  const s          = useStore();
   const [products, setProducts] = useState([]);
   const [sort,     setSort]     = useState('default');
   const [loading,  setLoading]  = useState(true);
@@ -70,8 +72,8 @@ export default function CategoryPage() {
           <span className="text-dim mono" style={{ fontSize: 12 }}>{sorted.length} PRODUCTS</span>
           <select className="inp" value={sort} onChange={e => setSort(e.target.value)} style={{ width: 'auto', padding: '8px 12px' }}>
             <option value="default">Featured</option>
-            <option value="low">Price: Low → High</option>
-            <option value="high">Price: High → Low</option>
+            {SHOW_PRICES && <option value="low">Price: Low → High</option>}
+            {SHOW_PRICES && <option value="high">Price: High → Low</option>}
             <option value="rating">Top Rated</option>
           </select>
         </div>
@@ -86,7 +88,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <div className="pgrid">
-            {sorted.map(p => <ProductCard key={p.id || p._id} product={p} />)}
+            {sorted.map(p => <ProductCard key={p.id || p._id} product={p} onPreview={s.openPreview} />)}
           </div>
         )}
       </div>

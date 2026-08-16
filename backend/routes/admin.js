@@ -1,11 +1,27 @@
 const router = require('express').Router();
 const jwt    = require('jsonwebtoken');
 
-const SECRET   = process.env.JWT_SECRET       || 'tc_jwt_secret_2026';
-const USERNAME = process.env.ADMIN_USERNAME    || 'admin';
-const PASSWORD = process.env.ADMIN_PASSWORD    || 'TattooCenter2026!';
+const rateLimit = require('express-rate-limit');
 
-router.post('/login', (req, res) => {
+// No fallbacks: a missing env var must stop the server, not silently fall back
+// to a credential that is published in this repo.
+const SECRET   = process.env.JWT_SECRET;
+const USERNAME = process.env.ADMIN_USERNAME;
+const PASSWORD = process.env.ADMIN_PASSWORD;
+if (!SECRET || !USERNAME || !PASSWORD) {
+  throw new Error('JWT_SECRET, ADMIN_USERNAME and ADMIN_PASSWORD must all be set.');
+}
+
+// The admin password is a single shared secret, so brute force must be capped.
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/login', adminLoginLimiter, (req, res) => {
   const { username, password } = req.body || {};
   if (username !== USERNAME || password !== PASSWORD) {
     return res.status(401).json({ error: 'Invalid credentials' });
