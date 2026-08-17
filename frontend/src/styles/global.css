@@ -481,13 +481,6 @@ textarea.inp { resize: vertical; min-height: 92px; }
 .hero-film-play-label {
   font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
 }
-.hero-film-tag {
-  position: absolute; left: 14px; bottom: 13px; z-index: 2;
-  font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--faint); border: 1px solid var(--line); padding: 4px 9px; border-radius: 6px;
-  background: rgba(8,8,10,.6); backdrop-filter: blur(4px);
-}
-
 /* trust strip */
 .trust-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); }
 .trust-item { padding: 20px 18px; border-left: 1px solid var(--line); }

@@ -51,7 +51,6 @@ function HeroFilm() {
           <span className="hero-film-play-label">Watch the reel</span>
         </button>
       )}
-      <span className="hero-film-tag">Our mission · 1:32</span>
     </div>
   );
 }
