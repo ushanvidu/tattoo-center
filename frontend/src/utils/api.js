@@ -220,6 +220,13 @@ export async function adminUpdateOrderStatus(id, status) {
   return data;
 }
 
+// ─── Admin: Customers ─────────────────────────────────────────────────────────
+
+export async function adminFetchUsers(search = '') {
+  const { data } = await adminHttp.get('/users', { params: search ? { search } : {} });
+  return data;
+}
+
 // ─── Admin: Bookings ──────────────────────────────────────────────────────────
 
 export async function adminFetchBookings() {

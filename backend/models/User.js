@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   phone:    { type: String, default: '' },
   role:     { type: String, default: 'customer', enum: ['customer', 'admin'] },
   signupDiscountUsed: { type: Boolean, default: false },
+  // Lets the admin see who is actually active, not just who registered.
+  lastLoginAt: Date,
+  loginCount:  { type: Number, default: 0 },
 }, { timestamps: true });
 
 // Never return the password hash in JSON responses

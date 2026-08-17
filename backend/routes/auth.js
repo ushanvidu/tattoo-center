@@ -97,6 +97,11 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
+    // Record sign-in activity so the admin can see who is actually active.
+    // Best-effort: a failure here must never block a valid login.
+    User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() }, $inc: { loginCount: 1 } })
+      .catch(() => {});
+
     const token = makeToken(user);
     res.json({ token, user });
   } catch (e) {

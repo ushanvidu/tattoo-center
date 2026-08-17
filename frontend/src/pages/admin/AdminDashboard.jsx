@@ -6,6 +6,7 @@ import {
   adminFetchAnnouncements, adminCreateAnnouncement, adminUpdateAnnouncement, adminDeleteAnnouncement,
   adminFetchOrders, adminUpdateOrderStatus,
   adminFetchBookings,
+  adminFetchUsers,
   fetchAllQuestions, answerQuestion, deleteQuestion,
   fetchCategories, adminUpdateCategoryMedia,
   uploadFile,
@@ -44,6 +45,7 @@ const NAV = [
   { id:'announcements', icon:'📢', label:'Announcements' },
   { id:'orders',        icon:'🧾', label:'Orders' },
   { id:'bookings',      icon:'📅', label:'Bookings' },
+  { id:'customers',     icon:'👥', label:'Customers' },
   { id:'qa',            icon:'💬', label:'Q&A' },
 ];
 
@@ -732,6 +734,148 @@ function BookingsPanel() {
   );
 }
 
+
+// ─── Customers ────────────────────────────────────────────────────────────────
+
+function CustomersPanel() {
+  const [users,setUsers]     = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError]     = useState('');
+  const [search,setSearch]   = useState('');
+  const [copied,setCopied]   = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    adminFetchUsers()
+      .then(d => { if (alive) { setUsers(Array.isArray(d) ? d : []); setError(''); } })
+      .catch(() => { if (alive) setError('Could not load customers. Check you are still signed in.'); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, []);
+
+  const q = search.trim().toLowerCase();
+  const shown = q
+    ? users.filter(u => [u.fullName,u.email,u.phone].some(v => (v||'').toLowerCase().includes(q)))
+    : users;
+
+  const withEmail = shown.filter(u => u.email);
+  const withPhone = shown.filter(u => u.phone);
+
+  const flash = (msg) => { setCopied(msg); setTimeout(()=>setCopied(''), 2200); };
+
+  const copyEmails = async () => {
+    const list = withEmail.map(u => u.email).join(', ');
+    try { await navigator.clipboard.writeText(list); flash(`Copied ${withEmail.length} email addresses`); }
+    catch { flash('Could not copy — your browser blocked clipboard access'); }
+  };
+
+  // Excel/Sheets-friendly export for mail-merge or a bulk WhatsApp tool.
+  const exportCsv = () => {
+    const cell = (v) => `"${String(v ?? '').replace(/"/g,'""')}"`;
+    const head = ['Name','Email','Phone','Joined','Last login','Logins','Orders','Paid orders','Total spent (Rs.)'];
+    const rows = shown.map(u => [
+      u.fullName, u.email, u.phone,
+      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
+      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never',
+      u.loginCount || 0, u.orders || 0, u.paidOrders || 0, u.spent || 0,
+    ].map(cell).join(','));
+    const csv = [head.map(cell).join(','), ...rows].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tattoo-center-customers-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const waNumber = (phone) => {
+    const digits = String(phone||'').replace(/\D/g,'');
+    if (!digits) return null;
+    if (digits.startsWith('94')) return digits;
+    if (digits.startsWith('0'))  return '94' + digits.slice(1);
+    return digits;
+  };
+
+  return (
+    <div>
+      <h2 style={headStyle}>Customers</h2>
+      <p style={{...subStyle,marginBottom:20}}>
+        {users.length} registered account{users.length===1?'':'s'} · use these details for offers and follow-ups
+      </p>
+
+      {error && (
+        <div style={{background:'rgba(255,77,77,.1)',border:'1px solid rgba(255,77,77,.3)',color:'#ff8080',borderRadius:10,padding:'12px 14px',marginBottom:16,fontSize:13}}>
+          {error}
+        </div>
+      )}
+
+      <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:18}}>
+        <input
+          className="inp"
+          style={{...darkInp,flex:'1 1 240px',width:'auto'}}
+          value={search}
+          onChange={e=>setSearch(e.target.value)}
+          placeholder="Search name, email or phone…"
+        />
+        <button className="btn btn-ghost btn-sm" onClick={copyEmails} disabled={!withEmail.length}>
+          Copy {withEmail.length} email{withEmail.length===1?'':'s'}
+        </button>
+        <button className="btn btn-ghost btn-sm" onClick={exportCsv} disabled={!shown.length}>
+          Export CSV
+        </button>
+      </div>
+
+      {copied && <p style={{color:'#00e0c6',fontSize:12.5,margin:'0 0 14px'}}>{copied}</p>}
+
+      {loading ? <p style={subStyle}>Loading…</p> : (
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {shown.length===0 && (
+            <p style={{...subStyle,textAlign:'center',padding:'32px 0'}}>
+              {users.length===0 ? 'No customers have signed up yet.' : 'No customers match that search.'}
+            </p>
+          )}
+          {shown.map(u => {
+            const wa = waNumber(u.phone);
+            return (
+              <div key={u._id} style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.07)',borderRadius:12,padding:'16px 18px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{color:'#fff',fontWeight:500,marginBottom:3}}>
+                      {u.fullName || '(no name)'}
+                      {u.role==='admin' && <span style={{marginLeft:8,fontSize:10,letterSpacing:'.1em',color:'#00e0c6',border:'1px solid rgba(0,224,198,.35)',borderRadius:5,padding:'2px 6px'}}>ADMIN</span>}
+                    </div>
+                    <div style={{color:'rgba(255,255,255,.55)',fontSize:12.5,wordBreak:'break-all'}}>{u.email}</div>
+                    {u.phone && <div style={{color:'rgba(255,255,255,.4)',fontSize:12}}>{u.phone}</div>}
+                    <div style={{color:'rgba(255,255,255,.3)',fontSize:11,marginTop:5}}>
+                      Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                      {' · '}
+                      {u.lastLoginAt ? `last login ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'never signed in since'}
+                      {u.loginCount ? ` · ${u.loginCount} login${u.loginCount===1?'':'s'}` : ''}
+                    </div>
+                  </div>
+
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div style={{color:'#fff',fontSize:13}}>{u.paidOrders||0} paid order{(u.paidOrders||0)===1?'':'s'}</div>
+                    <div style={{color:'rgba(0,224,198,.75)',fontSize:12,marginTop:2}}>{fmt(u.spent||0)}</div>
+                    <div style={{color:'rgba(255,255,255,.3)',fontSize:11,marginTop:3}}>
+                      {u.signupDiscountUsed ? 'Signup 10% used' : 'Signup 10% unused'}
+                    </div>
+                    <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:8}}>
+                      {u.email && <a className="btn btn-ghost btn-sm" href={`mailto:${u.email}`}>Email</a>}
+                      {wa && <a className="btn btn-wa btn-sm" href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer">WhatsApp</a>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Q&A ──────────────────────────────────────────────────────────────────────
 
 function QAPanel() {
@@ -807,12 +951,13 @@ function QAPanel() {
 // ─── OVERVIEW ─────────────────────────────────────────────────────────────────
 
 function OverviewPanel() {
-  const [stats,setStats]=useState({products:0,orders:0,bookings:0,questions:0});
+  const [stats,setStats]=useState({products:0,orders:0,bookings:0,questions:0,customers:0});
   useEffect(()=>{
-    Promise.allSettled([adminFetchProducts(),adminFetchOrders(),adminFetchBookings(),fetchAllQuestions()])
-      .then(([p,o,b,q])=>setStats({
+    Promise.allSettled([adminFetchProducts(),adminFetchOrders(),adminFetchBookings(),fetchAllQuestions(),adminFetchUsers()])
+      .then(([p,o,b,q,u])=>setStats({
         products:p.value?.length||0, orders:o.value?.length||0,
         bookings:b.value?.length||0, questions:q.value?.filter(x=>x.status==='pending').length||0,
+        customers:u.value?.length||0,
       }));
   },[]);
   return(
@@ -823,6 +968,7 @@ function OverviewPanel() {
         <Stat label="Products in DB"       value={stats.products}  sub="Managed via admin" />
         <Stat label="Total Orders"         value={stats.orders}    sub="All time"          color="#f59e0b" />
         <Stat label="Demo Bookings"        value={stats.bookings}  sub="Received"          color="#a78bfa" />
+        <Stat label="Registered Customers" value={stats.customers} sub="Contactable"       color="#38bdf8" />
         <Stat label="Pending Questions"    value={stats.questions} sub="Need your reply"   color="#ef4444" />
       </div>
       <div style={{background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.07)',borderRadius:14,padding:'22px 24px'}}>
@@ -882,7 +1028,7 @@ const btnDel    = { padding:'5px 12px',borderRadius:7,border:'1px solid rgba(220
 
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
-const PANELS = { overview:OverviewPanel, products:ProductsPanel, categories:CategoriesPanel, announcements:AnnouncementsPanel, orders:OrdersPanel, bookings:BookingsPanel, qa:QAPanel };
+const PANELS = { overview:OverviewPanel, products:ProductsPanel, categories:CategoriesPanel, announcements:AnnouncementsPanel, orders:OrdersPanel, bookings:BookingsPanel, customers:CustomersPanel, qa:QAPanel };
 
 export default function AdminDashboard() {
   const { admin, loading, logout } = useAdmin();
