@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS, CATEGORIES, BRANDS, fmt, SHOW_PRICES } from '../data/data';
-import { fetchProducts } from '../utils/api';
+import { PRODUCTS, CATEGORIES, fmt, SHOW_PRICES } from '../data/data';
+import { fetchProducts, fetchBrands } from '../utils/api';
 import { searchProducts } from '../utils/search';
 import ProductCard from '../components/shared/ProductCard';
 import Icons from '../components/shared/Icons';
@@ -24,7 +24,8 @@ export default function ShopPage() {
   const initCat  = location.state?.cat;
   const [products, setProducts] = useState(PRODUCTS);
   const [cats,    setCats]    = useState(initCat ? [initCat] : []);
-  const [brands,  setBrands]  = useState([]);
+  const [brands,  setBrands]  = useState([]);      // selected in the filter
+  const [allBrands, setAllBrands] = useState([]); // available in the catalogue
   const [skill,   setSkill]   = useState([]);
   const [inStock, setInStock] = useState(false);
   const [maxPrice,setMaxPrice]= useState(null); // null = no cap yet (full range of whatever loaded)
@@ -33,6 +34,7 @@ export default function ShopPage() {
   const [search,  setSearch]  = useState(searchParams.get('search') || '');
 
   useEffect(() => { fetchProducts().then(setProducts).catch(() => {}); }, []);
+  useEffect(() => { fetchBrands().then(setAllBrands).catch(() => setAllBrands([])); }, []);
   useEffect(() => { if (location.state?.cat) setCats([location.state.cat]); }, [location.state?.cat]);
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => {
@@ -122,10 +124,14 @@ export default function ShopPage() {
               {['Beginner','Professional','All'].map(k => <FOpt key={k} on={skill.includes(k)} onClick={() => toggle(skill, setSkill, k)} label={k} />)}
             </div>
 
-            <div className="fgroup">
-              <h4>Brand</h4>
-              {BRANDS.map(b => <FOpt key={b} on={brands.includes(b)} onClick={() => toggle(brands, setBrands, b)} label={b} />)}
-            </div>
+            {allBrands.length > 0 && (
+              <div className="fgroup">
+                <h4>Brand</h4>
+                {allBrands.map(b => (
+                  <FOpt key={b.name} on={brands.includes(b.name)} onClick={() => toggle(brands, setBrands, b.name)} label={b.name} count={b.count} />
+                ))}
+              </div>
+            )}
 
             <div className="fgroup">
               <h4>Availability</h4>

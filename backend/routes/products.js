@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
     const { cat, brand, skill, maxPrice, sort, search, tags, limit, full } = req.query;
     // Query params arrive as strings; anything else (?cat[$ne]=x, ?cat[]=a)
     // is a client sending an object/array, which used to crash .split().
-    const csv = (v) => (typeof v === 'string' && v ? v.split(',') : null);
+    const csv = (v) => (typeof v === 'string' && v ? v.split(',').map(x => x.trim()).filter(Boolean) : null);
     const q = {};
     const catList = csv(cat), brandList = csv(brand), skillList = csv(skill), tagList = csv(tags);
     if (catList)   q.cat   = { $in: catList };
@@ -74,6 +74,42 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Public: the brands that actually exist in the catalogue, with product counts.
+// The shop's brand filter is built from this, so adding a product with a new
+// brand makes that brand appear in the filter with no code change.
+// NOTE: must stay above `/:id`, or Express reads "brands" as a product id.
+router.get('/brands', async (_req, res) => {
+  try {
+    const rows = await Product.aggregate([
+      { $match: { brand: { $type: 'string', $ne: '' } } },
+      { $group: { _id: '$brand', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    res.json(rows.map(r => ({ name: r._id, count: r.count })));
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load brands.' });
+  }
+});
+
+// Admin: rename a brand across every product that carries it. Lets the owner
+// fix a typo or merge duplicates without editing each product by hand.
+router.patch('/brands/:name', adminAuth, async (req, res) => {
+  try {
+    const from = String(req.params.name || '').trim();
+    const to   = String(req.body && req.body.name || '').trim();
+    if (!from) return res.status(400).json({ error: 'Current brand name is required.' });
+    if (!to)   return res.status(400).json({ error: 'New brand name is required.' });
+    if (to.length > 80) return res.status(400).json({ error: 'Brand name is too long.' });
+
+    // Renaming onto an existing brand merges the two, which is intentional.
+    const result = await Product.updateMany({ brand: from }, { $set: { brand: to } });
+    if (!result.matchedCount) return res.status(404).json({ error: 'No products use that brand.' });
+    res.json({ from, to, updated: result.modifiedCount });
+  } catch (err) {
+    res.status(400).json({ error: 'Could not rename brand.' });
+  }
+});
+
 // Public: single product
 router.get('/:id', async (req, res) => {
   try {
@@ -85,10 +121,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// A brand typed with a stray space would otherwise show up as a second,
+// separate entry in the shop's brand filter.
+function normaliseBrand(body) {
+  if (body && typeof body.brand === 'string') body.brand = body.brand.trim();
+  return body;
+}
+
 // Admin: create product
 router.post('/', adminAuth, async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const product = await Product.create(normaliseBrand(req.body));
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -98,7 +141,7 @@ router.post('/', adminAuth, async (req, res) => {
 // Admin: update product
 router.patch('/:id', adminAuth, async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, normaliseBrand(req.body), { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Not found' });
     res.json(product);
   } catch (err) {

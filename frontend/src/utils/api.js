@@ -220,6 +220,20 @@ export async function adminUpdateOrderStatus(id, status) {
   return data;
 }
 
+// ─── Brands ───────────────────────────────────────────────────────────────────
+
+// Derived from the catalogue, so a product saved with a new brand makes that
+// brand appear in the shop filter immediately.
+export async function fetchBrands() {
+  const { data } = await http.get('/products/brands');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function adminRenameBrand(from, to) {
+  const { data } = await adminHttp.patch(`/products/brands/${encodeURIComponent(from)}`, { name: to });
+  return data;
+}
+
 // ─── Admin: Customers ─────────────────────────────────────────────────────────
 
 export async function adminFetchUsers(search = '') {

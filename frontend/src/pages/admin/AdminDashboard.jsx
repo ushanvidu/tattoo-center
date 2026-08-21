@@ -7,6 +7,7 @@ import {
   adminFetchOrders, adminUpdateOrderStatus,
   adminFetchBookings,
   adminFetchUsers,
+  fetchBrands, adminRenameBrand,
   fetchAllQuestions, answerQuestion, deleteQuestion,
   fetchCategories, adminUpdateCategoryMedia,
   uploadFile,
@@ -42,6 +43,7 @@ const NAV = [
   { id:'overview',      icon:'⊞',  label:'Overview' },
   { id:'products',      icon:'📦', label:'Products' },
   { id:'categories',    icon:'🗂',  label:'Categories' },
+  { id:'brands',        icon:'🏷',  label:'Brands' },
   { id:'announcements', icon:'📢', label:'Announcements' },
   { id:'orders',        icon:'🧾', label:'Orders' },
   { id:'bookings',      icon:'📅', label:'Bookings' },
@@ -200,12 +202,15 @@ const BLANK_PRODUCT = { name:'', cat:'printers', sub:'', price:'', old:'', brand
 
 function ProductsPanel() {
   const [products, setProducts] = useState([]);
+  const [knownBrands, setKnownBrands] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState('');
   const [editing,  setEditing]  = useState(null);
   const [form,     setForm]     = useState(BLANK_PRODUCT);
   const [saving,   setSaving]   = useState(false);
   const [err,      setErr]      = useState('');
+
+  useEffect(() => { fetchBrands().then(setKnownBrands).catch(() => setKnownBrands([])); }, []);
 
   const load = useCallback(() => {
     adminFetchProducts().then(setProducts).catch(() => setProducts([])).finally(() => setLoading(false));
@@ -335,7 +340,15 @@ function ProductsPanel() {
               <input className="inp" style={darkInp} value={form.sub} onChange={e => setForm(f=>({...f,sub:e.target.value}))} placeholder="e.g. Stencil Printers" />
             </ModalField>
             <ModalField label="Brand">
-              <input className="inp" style={darkInp} value={form.brand||''} onChange={e => setForm(f=>({...f,brand:e.target.value}))} placeholder="Brand name" />
+              <input className="inp" style={darkInp} list="tc-brand-options" value={form.brand||''}
+                     onChange={e => setForm(f=>({...f,brand:e.target.value}))}
+                     placeholder="Pick an existing brand or type a new one" />
+              <datalist id="tc-brand-options">
+                {knownBrands.map(b => <option key={b.name} value={b.name} />)}
+              </datalist>
+              <span style={{fontSize:11,color:'rgba(255,255,255,.35)',marginTop:4,display:'block'}}>
+                A new brand appears in the shop's brand filter automatically.
+              </span>
             </ModalField>
             <ModalField label="Highlight / Tagline" colSpan>
               <input className="inp" style={darkInp} value={form.highlight||''} onChange={e => setForm(f=>({...f,highlight:e.target.value}))} placeholder="One-line selling point shown on cards" />
@@ -735,6 +748,93 @@ function BookingsPanel() {
 }
 
 
+
+// ─── Brands ───────────────────────────────────────────────────────────────────
+
+// Brands are derived from the products that use them — there is no separate
+// brand record to create. Adding a product with a new brand adds the brand;
+// renaming here rewrites it across every product that carries it.
+function BrandsPanel() {
+  const [brands,setBrands]   = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [editing,setEditing] = useState(null);   // brand name being renamed
+  const [draft,setDraft]     = useState('');
+  const [busy,setBusy]       = useState(false);
+  const [err,setErr]         = useState('');
+  const [note,setNote]       = useState('');
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetchBrands()
+      .then(d => { setBrands(d); setErr(''); })
+      .catch(() => setErr('Could not load brands.'))
+      .finally(() => setLoading(false));
+  }, []);
+  useEffect(load, [load]);
+
+  const startEdit = (name) => { setEditing(name); setDraft(name); setErr(''); setNote(''); };
+  const cancel    = () => { setEditing(null); setDraft(''); };
+
+  const save = async () => {
+    const to = draft.trim();
+    if (!to)            { setErr('Brand name cannot be empty.'); return; }
+    if (to === editing) { cancel(); return; }
+    const merging = brands.some(b => b.name === to);
+    if (merging && !window.confirm(`"${to}" already exists. Merge "${editing}" into it? Products from both will share the one brand.`)) return;
+    setBusy(true); setErr('');
+    try {
+      const r = await adminRenameBrand(editing, to);
+      setNote(`Renamed "${r.from}" to "${r.to}" on ${r.updated} product${r.updated===1?'':'s'}.`);
+      cancel();
+      load();
+    } catch (e) {
+      setErr(e?.response?.data?.error || 'Could not rename brand.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div>
+      <h2 style={headStyle}>Brands</h2>
+      <p style={{...subStyle,marginBottom:20}}>
+        {brands.length} brand{brands.length===1?'':'s'} in the catalogue · these are exactly what customers see in the shop's brand filter
+      </p>
+
+      <div style={{background:'rgba(56,189,248,.07)',border:'1px solid rgba(56,189,248,.2)',borderRadius:10,padding:'12px 14px',marginBottom:18,fontSize:12.5,color:'rgba(255,255,255,.6)'}}>
+        To <strong style={{color:'#fff'}}>add</strong> a brand, just type it into the Brand field when adding or editing a product — it shows up here and in the shop filter straight away.
+      </div>
+
+      {err  && <div style={{background:'rgba(255,77,77,.1)',border:'1px solid rgba(255,77,77,.3)',color:'#ff8080',borderRadius:10,padding:'12px 14px',marginBottom:16,fontSize:13}}>{err}</div>}
+      {note && <p style={{color:'#00e0c6',fontSize:12.5,margin:'0 0 14px'}}>{note}</p>}
+
+      {loading ? <p style={subStyle}>Loading…</p> : brands.length === 0 ? (
+        <p style={{...subStyle,textAlign:'center',padding:'32px 0'}}>No brands yet — add a product with a brand name.</p>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {brands.map(b => (
+            <div key={b.name} style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.07)',borderRadius:12,padding:'12px 16px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+              {editing === b.name ? (
+                <>
+                  <input className="inp" style={{...darkInp,flex:'1 1 220px',width:'auto'}} value={draft} autoFocus
+                         onChange={e=>setDraft(e.target.value)}
+                         onKeyDown={e=>{ if(e.key==='Enter') save(); if(e.key==='Escape') cancel(); }} />
+                  <button className="btn btn-acc btn-sm" onClick={save} disabled={busy}>{busy?'Saving…':'Save'}</button>
+                  <button className="btn btn-ghost btn-sm" onClick={cancel} disabled={busy}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <span style={{color:'#fff',flex:'1 1 auto',minWidth:0}}>{b.name}</span>
+                  <span style={{color:'rgba(255,255,255,.4)',fontSize:12}}>{b.count} product{b.count===1?'':'s'}</span>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>startEdit(b.name)}>Rename</button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Customers ────────────────────────────────────────────────────────────────
 
 function CustomersPanel() {
@@ -1028,7 +1128,7 @@ const btnDel    = { padding:'5px 12px',borderRadius:7,border:'1px solid rgba(220
 
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
-const PANELS = { overview:OverviewPanel, products:ProductsPanel, categories:CategoriesPanel, announcements:AnnouncementsPanel, orders:OrdersPanel, bookings:BookingsPanel, customers:CustomersPanel, qa:QAPanel };
+const PANELS = { overview:OverviewPanel, products:ProductsPanel, categories:CategoriesPanel, brands:BrandsPanel, announcements:AnnouncementsPanel, orders:OrdersPanel, bookings:BookingsPanel, customers:CustomersPanel, qa:QAPanel };
 
 export default function AdminDashboard() {
   const { admin, loading, logout } = useAdmin();
