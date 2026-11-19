@@ -72,8 +72,8 @@ export default function Footer() {
         <div className="flex jb ac wrap-flex gap16" style={{ paddingBottom: 34 }}>
           <span className="mono text-dim" style={{ fontSize: 12 }}>© 2026 Tattoo Center · Professional Equipment</span>
           <div className="flex gap16 wrap-flex">
-            <span className="chip"><Icons.shield /> PayHere · Koko</span>
-            <span className="chip"><Icons.truck /> Island-wide delivery</span>
+            <span className="chip" style={{ whiteSpace: 'nowrap' }}><Icons.shield /> PayHere&nbsp;·&nbsp;Koko</span>
+            <span className="chip" style={{ whiteSpace: 'nowrap' }}><Icons.truck /> Island-wide delivery</span>
           </div>
         </div>
       </div>

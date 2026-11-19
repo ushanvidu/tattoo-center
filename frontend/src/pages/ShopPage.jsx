@@ -7,6 +7,11 @@ import { searchProducts } from '../utils/search';
 import ProductCard from '../components/shared/ProductCard';
 import Icons from '../components/shared/Icons';
 
+// Categories the shop owner doesn't want offered as filters. Products in them
+// still appear in the full listing — only the filter checkbox is hidden.
+const HIDDEN_FILTER_CATS = ['numbing', 'enhance', 'glide'];
+const FILTER_CATS = CATEGORIES.filter(c => !HIDDEN_FILTER_CATS.includes(c.id));
+
 function FOpt({ on, onClick, label, count }) {
   return (
     <div className={`fopt ${on ? 'on' : ''}`} onClick={onClick}>
@@ -93,7 +98,7 @@ export default function ShopPage() {
         <div className="wrap" style={{ position: 'relative', zIndex: 1 }}>
           <span className="eyebrow">The store</span>
           <h1 className="h1" style={{ margin: '14px 0 14px', maxWidth: '18ch' }}>Professional Tattoo Equipment for Modern Artists</h1>
-          <p className="lede">Stencil printers, tattoo machines, needles, inks, stencil papers and transfer cream — tested by professionals.</p>
+          <p className="lede">Stencil printers, tattoo machines, needles, inks, stencil papers and transfer cream - tested by professionals.</p>
         </div>
       </section>
 
@@ -108,7 +113,7 @@ export default function ShopPage() {
 
             <div className="fgroup">
               <h4>Category</h4>
-              {CATEGORIES.map(c => <FOpt key={c.id} on={cats.includes(c.id)} onClick={() => toggle(cats, setCats, c.id)} label={c.short} count={catCount(c.id)} />)}
+              {FILTER_CATS.map(c => <FOpt key={c.id} on={cats.includes(c.id)} onClick={() => toggle(cats, setCats, c.id)} label={c.short} count={catCount(c.id)} />)}
             </div>
 
             {SHOW_PRICES && (

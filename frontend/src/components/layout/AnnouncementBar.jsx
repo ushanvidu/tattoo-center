@@ -12,7 +12,7 @@ const TYPE_COLOR  = {
 
 const FALLBACK = [
   { _id:'f1', text:'Free island-wide delivery on orders over Rs 5,000', type:'promo', link:'/shop', linkLabel:'Shop Now' },
-  { _id:'f2', text:'New: Mirage M1 Stencil Printer — wireless & ultra-fast', type:'new',  link:'/product/p1', linkLabel:'View' },
+  { _id:'f2', text:'New: InkMotion Tattoo Printer — portable Bluetooth stencil printing', type:'new',  link:'/product/p2', linkLabel:'View' },
   { _id:'f3', text:'Book a free live demo — see equipment before you buy', type:'info', link:'/booking', linkLabel:'Book Now' },
 ];
 

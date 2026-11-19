@@ -69,12 +69,17 @@ const BODY_IMG_SRC = {
   leg:     '/stencil-body/leg.png',
 };
 
-// Where the design sits on each body part, and how wide it is at 100% size.
-// Both are normalised against the drawn limb, so placement holds at any
-// preview size. `span` is the design's width as a fraction of the limb's width.
+// Where the design sits on each body part, and how big it is at 100% size.
+// All values are normalised against the drawn limb, so placement holds at any
+// preview size.
+//   span   — upright parts: the design's width as a fraction of the limb's width.
+//            angled parts:  the longest the design may run along the limb.
+//   across — angled parts only: the widest the design may be across the limb.
+//   angle  — degrees to turn the design so it runs along the limb, with its
+//            top pointing toward the hand (the arm photos aren't upright).
 const BODY_PLACEMENT = {
-  arm:     { anchor: [0.62, 0.58], span: 0.30 },
-  forearm: { anchor: [0.60, 0.50], span: 0.28 },
+  arm:     { anchor: [0.60, 0.63], span: 0.30, across: 0.15, angle: -62 },
+  forearm: { anchor: [0.60, 0.60], span: 0.28, across: 0.12, angle: -88 },
   back:    { anchor: [0.50, 0.66], span: 0.46 },
   leg:     { anchor: [0.30, 0.24], span: 0.40 },
 };
@@ -218,10 +223,18 @@ export function StencilTool({ compact = false }) {
 
       // Size the design against the limb rather than the canvas, so it reads
       // like a real tattoo instead of covering the whole frame.
-      const tw = pw * cfg.span * (params.size / 100);
-      const th = tw * (h / w);
-      const tx = px + pw * cfg.anchor[0] - tw / 2;
-      const ty = py + ph * cfg.anchor[1] - th / 2;
+      // On angled limbs the design is turned to run along the limb, so fit it
+      // into a box that is long along the limb and narrow across it.
+      const scale = params.size / 100;
+      let tw, th;
+      if (cfg.angle) {
+        const fit = Math.min((pw * cfg.span) / h, (pw * cfg.across) / w);
+        tw = w * fit * scale; th = h * fit * scale;
+      } else {
+        tw = pw * cfg.span * scale; th = tw * (h / w);
+      }
+      const cxT = px + pw * cfg.anchor[0];
+      const cyT = py + ph * cfg.anchor[1];
 
       if (lines) {
         // Build the ink on its own layer so it can be masked to the skin —
@@ -230,8 +243,10 @@ export function StencilTool({ compact = false }) {
         layer.width = STAGE_W; layer.height = STAGE_H;
         const lx = layer.getContext('2d');
         lx.save();
-        if (params.mirror) { lx.translate(tx + tw / 2, 0); lx.scale(-1, 1); lx.translate(-(tx + tw / 2), 0); }
-        offsets.forEach(([dx, dy]) => lx.drawImage(lines, tx + dx, ty + dy, tw, th));
+        lx.translate(cxT, cyT);
+        if (cfg.angle) lx.rotate(cfg.angle * Math.PI / 180);
+        if (params.mirror) lx.scale(-1, 1);
+        offsets.forEach(([dx, dy]) => lx.drawImage(lines, -tw / 2 + dx, -th / 2 + dy, tw, th));
         lx.restore();
         lx.globalCompositeOperation = 'destination-in';
         if (photo) {

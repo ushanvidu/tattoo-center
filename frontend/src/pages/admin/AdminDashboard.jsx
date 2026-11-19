@@ -327,7 +327,7 @@ function ProductsPanel() {
           <SectionHead>Basic Information</SectionHead>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:14, marginBottom:20 }}>
             <ModalField label="Product Name *" colSpan>
-              <input className="inp" style={darkInp} value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Mirage M1 Stencil Printer" />
+              <input className="inp" style={darkInp} value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. InkMotion Tattoo Printer" />
             </ModalField>
             <ModalField label="Category *">
               <select className="inp" style={darkInp} value={form.cat} onChange={e => setForm(f=>({...f,cat:e.target.value}))}>
